@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monitor Caja Fuerte</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
+
+  <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">VaultGuard ESP32</h1>
+        <p class="text-xs text-slate-400">Monitoreo en tiempo real</p>
+      </div>
+      <span id="badge-conexion" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-400">
+        ● EN LÍNEA
+      </span>
+    </div>
+
+    <!-- Tarjeta de Estado Principal -->
+    <div id="card-estado" class="p-5 rounded-xl bg-slate-800/70 border border-slate-700 text-center transition-all">
+      <p class="text-xs uppercase tracking-widest text-slate-400">Estado Actual</p>
+      <h2 id="txt-estado" class="text-3xl font-extrabold mt-1 text-emerald-400">CARGANDO...</h2>
+    </div>
+
+    <!-- Métricas -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="p-4 rounded-xl bg-slate-800/50 border border-slate-800">
+        <p class="text-xs text-slate-400">Intentos Fallidos</p>
+        <p id="txt-intentos" class="text-2xl font-bold mt-1">0</p>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-800/50 border border-slate-800">
+        <p class="text-xs text-slate-400">Sensor MPU-6050</p>
+        <p id="txt-sensor" class="text-lg font-bold mt-1 text-emerald-400">Estable</p>
+      </div>
+    </div>
+
+    <!-- Último Evento -->
+    <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-800">
+      <p class="text-xs text-slate-400 mb-1">Último Evento Registrado</p>
+      <p id="txt-evento" class="text-sm font-medium text-slate-200">Esperando datos...</p>
+    </div>
+
+    <!-- Botón para silenciar/resetear alerta -->
+    <button onclick="resetearAlerta()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm transition">
+      Marcar Alerta como Revisada
+    </button>
+  </div>
+
+  <!-- Firebase SDK (v10 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      databaseURL: "https://TU-PROYECTO-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const cajaRef = ref(db, "caja");
+
+    onValue(cajaRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      const txtEstado = document.getElementById("txt-estado");
+      const cardEstado = document.getElementById("card-estado");
+      const txtSensor = document.getElementById("txt-sensor");
+
+      txtEstado.textContent = data.estado;
+      document.getElementById("txt-intentos").textContent = data.intentosFallidos;
+      document.getElementById("txt-evento").textContent = data.ultimoEvento;
+
+      if (data.alertaActiva) {
+        txtEstado.className = "text-3xl font-extrabold mt-1 text-rose-500 animate-pulse";
+        cardEstado.className = "p-5 rounded-xl bg-rose-950/50 border border-rose-500/60 text-center transition-all";
+        txtSensor.textContent = "¡ALERTA!";
+        txtSensor.className = "text-lg font-bold mt-1 text-rose-400";
+      } else {
+        txtEstado.className = "text-3xl font-extrabold mt-1 text-emerald-400";
+        cardEstado.className = "p-5 rounded-xl bg-slate-800/70 border border-slate-700 text-center transition-all";
+        txtSensor.textContent = "Estable";
+        txtSensor.className = "text-lg font-bold mt-1 text-emerald-400";
+      }
+    });
+
+    window.resetearAlerta = () => {
+      update(cajaRef, { alertaActiva: false, estado: "BLOQUEADA", ultimoEvento: "Alerta revisada desde la web" });
+    };
+  </script>
+</body>
+</html>

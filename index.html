@@ -3,68 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VaultGuard ESP32 | UTA - FISEI</title>
+  <title>VaultGuard ESP32 v4.0 | UTA - FISEI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --glow-color: rgba(16, 185, 129, 0.12);
+      --glow-color: rgba(16, 185, 129, 0.14);
+      --accent-border: rgba(52, 211, 153, 0.25);
     }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #040711;
+      background-color: #030610;
       background-image:
-        radial-gradient(circle at 12% 10%, var(--glow-color), transparent 40%),
-        radial-gradient(circle at 88% 85%, rgba(99, 102, 241, 0.10), transparent 40%),
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
-      transition: background-image 0.6s ease;
+        radial-gradient(circle at 10% 8%, var(--glow-color), transparent 42%),
+        radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.12), transparent 42%),
+        linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+      transition: background-image 0.5s ease;
     }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+    .font-cyber { font-family: 'Orbitron', sans-serif; }
     .glass {
-      background: rgba(13, 19, 36, 0.72);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(148, 163, 184, 0.13);
-      box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+      background: rgba(11, 17, 33, 0.76);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.75);
     }
+
+    /* Animaciones de Alerta */
     @keyframes pulse-ring {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.75); }
-      70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(244, 63, 94, 0); }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.8); }
+      70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(244, 63, 94, 0); }
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
     }
-    .alerta-ring { animation: pulse-ring 1.4s infinite; }
+    .alerta-ring { animation: pulse-ring 1.3s infinite; }
 
-    @keyframes radar-spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    @keyframes shake-alert {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-4px) rotate(-1deg); }
+      40% { transform: translateX(4px) rotate(1deg); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
     }
-    .radar-sweep {
-      background: conic-gradient(from 0deg, rgba(52, 211, 153, 0.28) 0deg, transparent 70deg);
-      animation: radar-spin 3.5s linear infinite;
+    .shake-active { animation: shake-alert 0.35s infinite; }
+
+    /* Escena 3D del MPU-6050 */
+    .scene-3d {
+      width: 112px;
+      height: 112px;
+      perspective: 500px;
     }
-    .radar-sweep-alert {
-      background: conic-gradient(from 0deg, rgba(244, 63, 94, 0.45) 0deg, transparent 70deg);
-      animation: radar-spin 1.2s linear infinite;
+    .cube-3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(28deg);
+      transition: transform 0.25s ease-out;
     }
+    .cube-face {
+      position: absolute;
+      width: 112px;
+      height: 112px;
+      border: 1.5px solid rgba(52, 211, 153, 0.6);
+      background: rgba(16, 185, 129, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(167, 243, 208, 0.85);
+      backface-visibility: visible;
+      box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.12);
+      transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+    }
+    .cube-alert .cube-face {
+      border-color: rgba(244, 63, 94, 0.85);
+      background: rgba(244, 63, 94, 0.15);
+      color: rgba(254, 205, 211, 0.95);
+      box-shadow: inset 0 0 22px rgba(244, 63, 94, 0.25);
+    }
+    .face-front  { transform: rotateY(0deg) translateZ(56px); }
+    .face-back   { transform: rotateY(180deg) translateZ(56px); }
+    .face-right  { transform: rotateY(90deg) translateZ(56px); }
+    .face-left   { transform: rotateY(-90deg) translateZ(56px); }
+    .face-top    { transform: rotateX(90deg) translateZ(56px); }
+    .face-bottom { transform: rotateX(-90deg) translateZ(56px); }
+
+    /* Animación Volante de Bóveda */
+    #vault-wheel {
+      transform-origin: 100px 100px;
+      transition: transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .vault-open #vault-wheel { transform: rotate(135deg); }
+    .vault-bolt { transition: transform 0.6s ease; }
+    .vault-open .bolt-top { transform: translateY(10px); }
+    .vault-open .bolt-bottom { transform: translateY(-10px); }
+    .vault-open .bolt-left { transform: translateX(10px); }
+    .vault-open .bolt-right { transform: translateX(-10px); }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 8px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.45); border-radius: 8px; }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen p-3 sm:p-5 md:p-7">
+<body class="text-slate-100 min-h-screen p-3 sm:p-5 md:p-6">
 
   <div class="max-w-7xl mx-auto space-y-5">
 
     <!-- 1. BANNER INSTITUCIONAL UTA -->
-    <div class="glass rounded-2xl px-5 py-3 border-t-2 border-t-red-700/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-3.5 text-center sm:text-left">
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-800 to-red-950 border border-red-500/40 flex flex-col items-center justify-center shadow-lg shadow-red-950/50 shrink-0">
-          <span class="text-xs font-black tracking-widest text-white leading-none">UTA</span>
-          <span class="text-[8px] font-mono-tech text-red-200 tracking-tighter mt-0.5">FISEI</span>
+    <div class="glass rounded-2xl px-5 py-3 border-t-2 border-t-red-600/90 flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3.5 text-center md:text-left">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-700 via-red-800 to-red-950 border border-red-400/40 flex flex-col items-center justify-center shadow-lg shadow-red-950/70 shrink-0">
+          <span class="text-sm font-black tracking-widest text-white leading-none font-cyber">UTA</span>
+          <span class="text-[8px] font-mono-tech text-red-200 tracking-wider mt-0.5">FISEI</span>
         </div>
         <div>
           <h2 class="text-sm sm:text-base font-extrabold tracking-wide text-white uppercase">
@@ -75,37 +130,47 @@
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-2 text-[11px] font-mono-tech text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
-        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-        <span>PROYECTO IOT • SEGURIDAD INTELIGENTE</span>
+
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <button onclick="toggleFullscreen()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-[11px] font-mono-tech text-slate-300 transition">
+          ⛶ Pantalla Completa
+        </button>
+        <button id="btn-wakelock" onclick="toggleWakeLock()" class="px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-[11px] font-mono-tech text-slate-300 transition">
+          ☀ Mantener Activa: OFF
+        </button>
       </div>
     </div>
 
-    <!-- 2. BARRA DE CONTROL PRINCIPAL -->
-    <header class="glass rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <!-- 2. BARRA DE COMANDO PRINCIPAL -->
+    <header class="glass rounded-2xl px-5 py-4 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div id="icono-escudo" class="w-13 h-13 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 transition-all">
-          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <div id="icono-escudo" class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 transition-all shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
         <div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <h1 class="text-xl sm:text-2xl font-black tracking-tight">VaultGuard <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">ESP32</span></h1>
-            <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">v3.0 SOC</span>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight font-cyber">
+              VAULTGUARD <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400">ESP32</span>
+            </h1>
+            <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">v4.0 ULTIMATE</span>
           </div>
-          <p class="text-xs text-slate-400">Centro de Monitoreo en Tiempo Real • Sensor MPU-6050 + Teclado Matricial + Firebase</p>
+          <p class="text-xs text-slate-400">Telemetría Sísmica 3D • Control de Acceso Remoto • Asistente de Voz IA</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <button id="btn-notif" onclick="activarNotificaciones()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-indigo-200 flex items-center gap-1.5 transition">
-          <span id="txt-notif">🔔 Notificaciones: OFF</span>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btn-notif" onclick="activarNotificaciones()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-indigo-200 transition">
+          <span id="txt-notif">🔔 Notif: OFF</span>
         </button>
-        <button id="btn-sonido" onclick="toggleSonido()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5 transition">
+        <button id="btn-voz" onclick="toggleVoz()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-cyan-600/15 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-200 transition">
+          <span id="txt-voz">🗣️ Voz IA: OFF</span>
+        </button>
+        <button id="btn-sonido" onclick="toggleSonido()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition">
           <span id="txt-sonido">🔇 Sirena: OFF</span>
         </button>
-        <div class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono-tech text-cyan-300" id="reloj">--:--:--</div>
+        <div class="px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-800 text-xs font-mono-tech text-cyan-300" id="reloj">--:--:--</div>
         <span id="badge-conexion" class="px-3 py-2 text-xs font-semibold rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1.5">
           <span id="dot-conexion" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           <span id="txt-conexion">CONECTANDO</span>
@@ -113,192 +178,278 @@
       </div>
     </header>
 
-    <!-- 3. TARJETAS KPI SUPERIORES -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="glass rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <p class="text-[11px] uppercase tracking-wider text-slate-400">Nivel de Amenaza</p>
-          <p id="txt-amenaza" class="text-xl font-extrabold font-mono-tech text-emerald-400 mt-1">BAJO</p>
-          <div class="flex gap-1 mt-2">
-            <span id="bar-1" class="h-1.5 w-7 rounded-full bg-emerald-500"></span>
-            <span id="bar-2" class="h-1.5 w-7 rounded-full bg-slate-700"></span>
-            <span id="bar-3" class="h-1.5 w-7 rounded-full bg-slate-700"></span>
-          </div>
-        </div>
-        <div class="text-2xl opacity-80">🛡️</div>
-      </div>
-
-      <div class="glass rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <p class="text-[11px] uppercase tracking-wider text-slate-400">Intentos Fallidos</p>
-          <div class="flex items-baseline gap-1.5 mt-1">
-            <p id="txt-intentos" class="text-2xl font-extrabold font-mono-tech text-white">0</p>
-            <span class="text-xs text-slate-500">/ 3 máx</span>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1">Teclado matricial 4x4</p>
-        </div>
-        <div class="text-2xl opacity-80">🔢</div>
-      </div>
-
-      <div class="glass rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <p class="text-[11px] uppercase tracking-wider text-slate-400">Pico Máx. MPU-6050</p>
-          <p id="txt-pico" class="text-2xl font-extrabold font-mono-tech text-cyan-400 mt-1">0.00</p>
-          <p class="text-[11px] text-slate-400 mt-1">m/s² registrados hoy</p>
-        </div>
-        <div class="text-2xl opacity-80">📈</div>
-      </div>
-
-      <div class="glass rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <p class="text-[11px] uppercase tracking-wider text-slate-400">Alertas de Sesión</p>
-          <p id="txt-total-alertas" class="text-2xl font-extrabold font-mono-tech text-rose-400 mt-1">0</p>
-          <p id="txt-uptime" class="text-[11px] font-mono-tech text-slate-400 mt-1">Activo: 00:00:00</p>
-        </div>
-        <div class="text-2xl opacity-80">🚨</div>
-      </div>
-    </div>
-
-    <!-- 4. GRID PRINCIPAL -->
+    <!-- 3. FILA HERO: BÓVEDA ANIMADA + VISOR 3D MPU-6050 + COMANDOS & HARDWARE -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-      <!-- COLUMNA IZQUIERDA (4 cols): Estado + Radar + Comandos -->
-      <div class="lg:col-span-4 space-y-5">
+      <!-- Bóveda Animada SVG (4 cols) -->
+      <div id="card-estado" class="lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between text-center transition-all border-emerald-500/30">
+        <div class="w-full flex items-center justify-between text-[11px] font-mono-tech text-slate-400">
+          <span>BÓVEDA PRINCIPAL</span>
+          <span id="badge-amenaza" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">RIESGO: BAJO</span>
+        </div>
 
-        <!-- Tarjeta de Estado Principal -->
-        <div id="card-estado" class="glass rounded-2xl p-6 text-center transition-all border-emerald-500/30">
-          <p class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Estado de la Bóveda</p>
-          <h2 id="txt-estado" class="text-3xl font-black mt-2 tracking-tight text-emerald-400 font-mono-tech">CARGANDO...</h2>
-          <p id="txt-evento" class="text-xs text-slate-300 mt-3 bg-slate-950/70 py-2.5 px-3 rounded-xl border border-slate-800">
+        <!-- SVG Puerta de Bóveda -->
+        <div id="vault-container" class="my-3 relative">
+          <svg width="170" height="170" viewBox="0 0 200 200" class="drop-shadow-2xl">
+            <circle cx="100" cy="100" r="90" fill="#091022" stroke="#1e293b" stroke-width="6"/>
+            <circle id="vault-ring" cx="100" cy="100" r="78" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="10 6"/>
+            <!-- Pernos -->
+            <rect class="vault-bolt bolt-top" x="94" y="14" width="12" height="22" rx="3" fill="#64748b"/>
+            <rect class="vault-bolt bolt-bottom" x="94" y="164" width="12" height="22" rx="3" fill="#64748b"/>
+            <rect class="vault-bolt bolt-left" x="14" y="94" width="22" height="12" rx="3" fill="#64748b"/>
+            <rect class="vault-bolt bolt-right" x="164" y="94" width="22" height="12" rx="3" fill="#64748b"/>
+            <!-- Volante giratorio -->
+            <g id="vault-wheel">
+              <circle cx="100" cy="100" r="46" fill="#0f172a" stroke="#475569" stroke-width="5"/>
+              <line x1="100" y1="54" x2="100" y2="146" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+              <line x1="54" y1="100" x2="146" y2="100" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+              <circle id="vault-core" cx="100" cy="100" r="16" fill="#10b981" stroke="#0f172a" stroke-width="4"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="w-full">
+          <h2 id="txt-estado" class="text-2xl sm:text-3xl font-black tracking-wider text-emerald-400 font-cyber">CARGANDO...</h2>
+          <p id="txt-evento" class="text-xs text-slate-300 mt-2.5 bg-slate-950/80 py-2 px-3 rounded-xl border border-slate-800 truncate">
             Esperando sincronización con ESP32...
           </p>
         </div>
+      </div>
 
-        <!-- Radar de Estabilidad MPU-6050 -->
-        <div class="glass rounded-2xl p-5 flex items-center gap-5">
-          <div class="relative w-24 h-24 rounded-full border border-slate-700 bg-slate-950/90 flex items-center justify-center overflow-hidden shrink-0">
-            <div id="radar-sweep" class="absolute inset-0 radar-sweep"></div>
-            <div class="absolute w-16 h-16 rounded-full border border-slate-800"></div>
-            <div class="absolute w-8 h-8 rounded-full border border-slate-800"></div>
-            <div class="absolute w-full h-px bg-slate-800/80"></div>
-            <div class="absolute h-full w-px bg-slate-800/80"></div>
-            <div id="radar-dot" class="w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/70 transition-transform duration-300 z-10"></div>
+      <!-- Visor 3D MPU-6050 + KPIs (4 cols) -->
+      <div class="lg:col-span-4 glass rounded-2xl p-6 flex flex-col justify-between gap-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Orientación 3D (MPU-6050)</p>
+            <p id="txt-sensor" class="text-base font-extrabold text-emerald-400 mt-0.5">Estable en Reposo</p>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Radar Giroscopio</p>
-            <p id="txt-sensor" class="text-lg font-extrabold text-emerald-400 mt-0.5">Estable</p>
-            <p id="txt-acel" class="text-xs font-mono-tech text-slate-300 mt-1">Δa: 0.00 m/s²</p>
-            <p class="text-[11px] text-slate-500 mt-1">Umbral activo: <span id="lbl-umbral-mini" class="text-indigo-300 font-mono-tech">3.0</span> m/s²</p>
+          <span class="text-[10px] font-mono-tech px-2 py-1 rounded bg-slate-900 border border-slate-700 text-cyan-300">6-DOF IMU</span>
+        </div>
+
+        <!-- Cubo 3D interactivo -->
+        <div class="flex items-center justify-center py-4">
+          <div class="scene-3d">
+            <div id="cube-3d" class="cube-3d">
+              <div class="cube-face face-front">FRENTE</div>
+              <div class="cube-face face-back">ATRÁS</div>
+              <div class="cube-face face-right">DER</div>
+              <div class="cube-face face-left">IZQ</div>
+              <div class="cube-face face-top">MPU-6050</div>
+              <div class="cube-face face-bottom">BASE</div>
+            </div>
           </div>
         </div>
 
-        <!-- Comandos Remotos -->
-        <div class="glass rounded-2xl p-5 space-y-3">
-          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Comandos Remotos</p>
+        <!-- Métricas numéricas -->
+        <div class="grid grid-cols-3 gap-2.5 text-center">
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            <p class="text-[10px] text-slate-400">Actual Δa</p>
+            <p id="txt-acel" class="text-sm font-bold font-mono-tech text-emerald-400 mt-0.5">0.00</p>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            <p class="text-[10px] text-slate-400">Pico Máx</p>
+            <p id="txt-pico" class="text-sm font-bold font-mono-tech text-cyan-400 mt-0.5">0.00</p>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            <p class="text-[10px] text-slate-400">Fallos PIN</p>
+            <p id="txt-intentos" class="text-sm font-bold font-mono-tech text-white mt-0.5">0 / 3</p>
+          </div>
+        </div>
+      </div>
 
-          <button onclick="resetearAlerta()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25">
-            <span>✓</span> Marcar Alerta como Revisada
+      <!-- Comandos Remotos + Topología de Hardware (4 cols) -->
+      <div class="lg:col-span-4 space-y-5 flex flex-col justify-between">
+        <!-- Comandos -->
+        <div class="glass rounded-2xl p-5 space-y-3">
+          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Comandos Tácticos</p>
+
+          <button onclick="abrirModalPin()" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40">
+            <span>🔓</span> Apertura Remota (Con PIN)
           </button>
 
           <div class="grid grid-cols-2 gap-3">
-            <button onclick="abrirRemoto()" class="py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/40 text-emerald-300 font-semibold text-xs transition">
-              🔓 Abrir Remoto
+            <button onclick="resetearAlerta()" class="py-2.5 px-3 rounded-xl bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 font-semibold text-xs transition">
+              ✓ Reset Alerta
             </button>
-            <button onclick="activarPanico()" class="py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/40 text-rose-300 font-semibold text-xs transition">
-              🚨 Bloqueo Pánico
+            <button onclick="activarPanico()" class="py-2.5 px-3 rounded-xl bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/50 text-rose-200 font-semibold text-xs transition">
+              🚨 Modo Pánico
             </button>
           </div>
         </div>
 
+        <!-- Topología de Hardware -->
+        <div class="glass rounded-2xl p-5 flex-1">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Diagnóstico Hardware</p>
+            <span id="txt-uptime" class="text-[10px] font-mono-tech text-slate-400">00:00:00</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px] font-mono-tech">
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>ESP32 WiFi</span>
+              <span id="hw-wifi" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>MPU 0x68</span>
+              <span id="hw-mpu" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>LCD 0x27</span>
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>Servo G18</span>
+              <span id="hw-servo" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>Keypad 4x3</span>
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/70 px-2.5 py-2 rounded-lg border border-slate-800">
+              <span>Buzzer G19</span>
+              <span id="hw-buzzer" class="w-2 h-2 rounded-full bg-slate-500"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. FILA ANALÍTICA: GRÁFICA SÍSMICA + CONFIGURACIÓN & ESTADÍSTICAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- Gráfica + Logs (8 cols) -->
+      <div class="lg:col-span-8 space-y-5">
+        <div class="glass rounded-2xl p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Monitor Sísmico Vectorial en Vivo (MPU-6050)</h3>
+              <p class="text-xs text-slate-400">Variación de aceleración (m/s²) frente al umbral dinámico configurado</p>
+            </div>
+            <span class="text-[10px] font-mono-tech px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 w-fit">LIVE TELEMETRY</span>
+          </div>
+          <div class="h-56 w-full">
+            <canvas id="mpuChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Registro de Auditoría -->
+        <div class="glass rounded-2xl p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Consola de Auditoría (Logs)</h3>
+              <p class="text-xs text-slate-400">Historial en tiempo real exportable para informes</p>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button onclick="filtrarLogs('todos')" id="f-todos" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white">Todos</button>
+              <button onclick="filtrarLogs('alerta')" id="f-alerta" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Alertas</button>
+              <button onclick="filtrarLogs('ok')" id="f-ok" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Accesos</button>
+              <button onclick="exportarCSV()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/35">⬇ CSV</button>
+              <button onclick="limpiarLogs()" class="px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-rose-300">Limpiar</button>
+            </div>
+          </div>
+          <div id="lista-logs" class="h-52 overflow-y-auto space-y-2 pr-1 font-mono-tech text-xs">
+            <div class="text-slate-500 italic py-4 text-center">Iniciando escucha en Firebase Realtime Database...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuración + Donut + Simulador (4 cols) -->
+      <div class="lg:col-span-4 space-y-5">
+
         <!-- Configuración Remota -->
         <div class="glass rounded-2xl p-5 space-y-4">
-          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Configuración de Seguridad</p>
+          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Parámetros Remotos</p>
 
-          <!-- Sensibilidad MPU -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <span class="text-slate-300">Sensibilidad MPU-6050</span>
+              <span class="text-slate-300">Umbral MPU-6050</span>
               <span id="val-umbral" class="font-mono-tech text-cyan-300 font-bold">3.0 m/s²</span>
             </div>
             <input id="slider-umbral" type="range" min="1.0" max="6.0" step="0.5" value="3.0"
-              oninput="document.getElementById('val-umbral').textContent = this.value + ' m/s²'"
+              oninput="document.getElementById('val-umbral').textContent = parseFloat(this.value).toFixed(1) + ' m/s²'"
               onchange="actualizarUmbral(this.value)"
               class="w-full accent-indigo-500 cursor-pointer">
             <div class="flex justify-between text-[10px] text-slate-500 font-mono-tech mt-0.5">
-              <span>Alta (1.0)</span>
-              <span>Media (3.0)</span>
-              <span>Baja (6.0)</span>
+              <span>Sensible (1.0)</span>
+              <span>Normal (3.0)</span>
+              <span>Rígido (6.0)</span>
             </div>
           </div>
 
-          <!-- Cambiar PIN -->
-          <div class="pt-2 border-t border-slate-800/80">
-            <label class="text-xs text-slate-300 block mb-1.5">Actualizar PIN de Acceso (4 dígitos)</label>
+          <div class="pt-3 border-t border-slate-800">
+            <label class="text-xs text-slate-300 block mb-1.5">Cambiar PIN Maestro (4 dígitos)</label>
             <div class="flex gap-2">
-              <input id="input-pin" type="password" maxlength="4" placeholder="Ej: 4829"
-                class="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700 text-sm font-mono-tech text-white focus:outline-none focus:border-indigo-500">
-              <button onclick="cambiarPin()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700 text-xs font-semibold transition shrink-0">
+              <input id="input-pin" type="password" maxlength="4" placeholder="Nuevo PIN"
+                class="w-full px-3 py-2 rounded-xl bg-slate-950/90 border border-slate-700 text-sm font-mono-tech text-white focus:outline-none focus:border-indigo-500">
+              <button onclick="cambiarPin()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition shrink-0">
                 Guardar
               </button>
             </div>
           </div>
         </div>
 
-      </div>
-
-      <!-- COLUMNA DERECHA (8 cols): Gráfica en vivo + Consola de Auditoría -->
-      <div class="lg:col-span-8 space-y-5">
-
-        <!-- Gráfica MPU-6050 -->
+        <!-- Gráfica Donut de Eventos -->
         <div class="glass rounded-2xl p-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <div>
-              <h3 class="text-sm font-bold text-slate-100">Monitor Sísmico / Aceleración Vectorial (MPU-6050)</h3>
-              <p class="text-xs text-slate-400">Telemetría continua con línea de referencia de umbral de intrusión</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-mono-tech px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">I2C: 0x68</span>
-              <span class="text-[10px] font-mono-tech px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">LIVE FEED</span>
-            </div>
-          </div>
-          <div class="h-64 w-full">
-            <canvas id="mpuChart"></canvas>
+          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-3">Resumen de Actividad</p>
+          <div class="h-36 flex items-center justify-center">
+            <canvas id="donutChart"></canvas>
           </div>
         </div>
 
-        <!-- Registro de Auditoría (Logs) -->
-        <div class="glass rounded-2xl p-5">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <div>
-              <h3 class="text-sm font-bold text-slate-100">Registro de Auditoría y Eventos (Logs)</h3>
-              <p class="text-xs text-slate-400">Historial cronológico de accesos, comandos y alertas del sistema</p>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <button onclick="filtrarLogs('todos')" id="f-todos" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white transition">Todos</button>
-              <button onclick="filtrarLogs('alerta')" id="f-alerta" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Alertas</button>
-              <button onclick="filtrarLogs('ok')" id="f-ok" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Accesos</button>
-              <button onclick="exportarCSV()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/35 transition">⬇ CSV</button>
-              <button onclick="limpiarLogs()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-rose-300 transition">Limpiar</button>
-            </div>
+        <!-- Simulador de Presentación (Local) -->
+        <div class="glass rounded-2xl p-5 border-indigo-500/30">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs uppercase tracking-widest text-indigo-300 font-semibold">Simulador Demo (Local)</p>
+            <span class="text-[10px] font-mono-tech text-slate-400">Sin afectar HW</span>
           </div>
-          <div id="lista-logs" class="h-64 overflow-y-auto space-y-2 pr-1 font-mono-tech text-xs">
-            <div class="text-slate-500 italic py-4 text-center">Iniciando escucha en Firebase Realtime Database...</div>
+          <p class="text-[11px] text-slate-400 mb-3">Úsalo en tu exposición para demostrar alertas, 3D y voz al instante.</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button onclick="simularEstado('alerta')" class="py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/40 text-rose-300 text-[11px] font-semibold transition">💥 Robo</button>
+            <button onclick="simularEstado('abierta')" class="py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 border border-amber-500/40 text-amber-300 text-[11px] font-semibold transition">🔓 Abrir</button>
+            <button onclick="simularEstado('segura')" class="py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold transition">🛡️ Cerrar</button>
           </div>
         </div>
 
       </div>
     </div>
 
-    <!-- Pie de página -->
     <footer class="text-center text-[11px] text-slate-500 py-2 font-mono-tech">
-      VaultGuard ESP32 • Universidad Técnica de Ambato (FISEI) • Ingeniería en Telecomunicaciones
+      VaultGuard ESP32 v4.0 • Universidad Técnica de Ambato (FISEI) • Ingeniería en Telecomunicaciones
     </footer>
   </div>
 
-  <!-- Contenedor de Toast -->
+  <!-- MODAL TECLADO PIN TÁCTICO PARA APERTURA REMOTA -->
+  <div id="modal-pin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="glass rounded-2xl p-6 w-full max-w-xs border-indigo-500/40 space-y-4 text-center">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-mono-tech uppercase text-indigo-300 font-bold">Autorización Remota</span>
+        <button onclick="cerrarModalPin()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-400">Ingresa el PIN de 4 dígitos de la caja fuerte</p>
+      <div id="pin-display" class="py-3 rounded-xl bg-slate-950 border border-slate-800 font-mono-tech text-2xl tracking-[0.6em] text-cyan-400">
+        ----
+      </div>
+      <div class="grid grid-cols-3 gap-2.5 font-mono-tech font-bold text-lg">
+        <button onclick="teclaPin('1')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">1</button>
+        <button onclick="teclaPin('2')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">2</button>
+        <button onclick="teclaPin('3')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">3</button>
+        <button onclick="teclaPin('4')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">4</button>
+        <button onclick="teclaPin('5')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">5</button>
+        <button onclick="teclaPin('6')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">6</button>
+        <button onclick="teclaPin('7')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">7</button>
+        <button onclick="teclaPin('8')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">8</button>
+        <button onclick="teclaPin('9')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">9</button>
+        <button onclick="borrarPinModal()" class="py-3 rounded-xl bg-rose-950/60 hover:bg-rose-900/70 text-rose-300 text-xs">BORRAR</button>
+        <button onclick="teclaPin('0')" class="py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700 transition">0</button>
+        <button onclick="validarPinModal()" class="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor Toast -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
 
-  <!-- Firebase SDK + Lógica -->
+  <!-- Firebase + Lógica Avanzada -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -312,26 +463,28 @@
     const cajaRef = ref(db, "caja");
     const connectedRef = ref(db, ".info/connected");
 
-    // --- Variables de Estado ---
+    // --- Estado Global ---
     let valorAcelActual = 0.05;
     let umbralActual = 3.0;
     let picoMax = 0.0;
-    let totalAlertas = 0;
     let alertaGlobal = false;
+    let claveActualSistema = "7777";
+    let pinModalBuffer = "";
     let ultimoEventoGuardado = "";
     let filtroActual = "todos";
     let historialLogs = [];
+    let stats = { ok: 1, alerta: 0, fallos: 0 };
     const inicioSesion = Date.now();
 
-    // --- Toast elegante ---
+    // --- Toast ---
     function mostrarToast(texto, tipo = "info") {
       const cont = document.getElementById("toast-container");
       const el = document.createElement("div");
       const colores = tipo === "alerta"
-        ? "bg-rose-950/95 border-rose-500/60 text-rose-200"
+        ? "bg-rose-950/95 border-rose-500/70 text-rose-100"
         : tipo === "ok"
-        ? "bg-emerald-950/95 border-emerald-500/60 text-emerald-200"
-        : "bg-slate-900/95 border-indigo-500/50 text-slate-100";
+        ? "bg-emerald-950/95 border-emerald-500/70 text-emerald-100"
+        : "bg-slate-900/95 border-indigo-500/60 text-slate-100";
       el.className = `px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-md transition-all ${colores}`;
       el.textContent = texto;
       cont.appendChild(el);
@@ -345,27 +498,489 @@
       const h = String(Math.floor(seg / 3600)).padStart(2, "0");
       const m = String(Math.floor((seg % 3600) / 60)).padStart(2, "0");
       const s = String(seg % 60).padStart(2, "0");
-      document.getElementById("txt-uptime").textContent = `Activo: ${h}:${m}:${s}`;
+      document.getElementById("txt-uptime").textContent = `UP: ${h}:${m}:${s}`;
     }, 1000);
 
-    // --- Estado Real de Conexión a Firebase ---
+    // --- Pantalla Completa y Wake Lock ---
+    window.toggleFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen();
+      }
+    };
+
+    let wakeLock = null;
+    window.toggleWakeLock = async () => {
+      const btn = document.getElementById("btn-wakelock");
+      if (!("wakeLock" in navigator)) {
+        mostrarToast("Tu navegador no soporta Wake Lock.", "alerta");
+        return;
+      }
+      if (!wakeLock) {
+        try {
+          wakeLock = await navigator.wakeLock.request("screen");
+          btn.textContent = "☀ Mantener Activa: ON";
+          mostrarToast("Pantalla bloqueada en modo siempre activo.", "ok");
+        } catch {
+          mostrarToast("No se pudo activar Wake Lock.", "alerta");
+        }
+      } else {
+        await wakeLock.release();
+        wakeLock = null;
+        btn.textContent = "☀ Mantener Activa: OFF";
+      }
+    };
+
+    // --- Voz IA (Web Speech API) ---
+    let vozActiva = false;
+    window.toggleVoz = () => {
+      vozActiva = !vozActiva;
+      document.getElementById("txt-voz").textContent = vozActiva ? "🗣️ Voz IA: ON" : "🗣️ Voz IA: OFF";
+      if (vozActiva) hablar("Asistente de voz VaultGuard activado.");
+    };
+
+    function hablar(texto) {
+      if (!vozActiva || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const msg = new SpeechSynthesisUtterance(texto);
+      msg.lang = "es-ES";
+      msg.rate = 1.05;
+      window.speechSynthesis.speak(msg);
+    }
+
+    // --- Notificaciones Nativas + Vibración ---
+    function actualizarBotonNotif() {
+      const btn = document.getElementById("txt-notif");
+      if (!("Notification" in window)) btn.textContent = "🚫 No soportado";
+      else if (Notification.permission === "granted") btn.textContent = "🔔 Notif: ON";
+      else if (Notification.permission === "denied") btn.textContent = "🔕 Bloqueadas";
+      else btn.textContent = "🔔 Notif: OFF";
+    }
+    actualizarBotonNotif();
+
+    window.activarNotificaciones = async () => {
+      if (!("Notification" in window)) return mostrarToast("Navegador no compatible.", "alerta");
+      const permiso = await Notification.requestPermission();
+      actualizarBotonNotif();
+      if (permiso === "granted") {
+        mostrarToast("Notificaciones del celular activadas.", "ok");
+        new Notification("VaultGuard ESP32 - UTA", { body: "Sistema listo para enviar alertas." });
+      }
+    };
+
+    function enviarNotificacionMovil(titulo, mensaje) {
+      if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 500]);
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(titulo, { body: mensaje, requireInteraction: true });
+      }
+    }
+
+    // --- Sirena Web Audio ---
+    let sonidoActivo = false;
+    let audioCtx = null;
+    window.toggleSonido = () => {
+      sonidoActivo = !sonidoActivo;
+      document.getElementById("txt-sonido").textContent = sonidoActivo ? "🔊 Sirena: ON" : "🔇 Sirena: OFF";
+      if (sonidoActivo && !audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    };
+
+    function sonarAlarma() {
+      if (!sonidoActivo || !audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(950, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(420, audioCtx.currentTime + 0.45);
+      gain.gain.setValueAtTime(0.16, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    // --- Conexión Real Firebase ---
     onValue(connectedRef, (snap) => {
       const badge = document.getElementById("badge-conexion");
       const dot = document.getElementById("dot-conexion");
       const txt = document.getElementById("txt-conexion");
+      const hwWifi = document.getElementById("hw-wifi");
       if (snap.val() === true) {
         badge.className = "px-3 py-2 text-xs font-semibold rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5";
         dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
         txt.textContent = "EN LÍNEA";
+        hwWifi.className = "w-2 h-2 rounded-full bg-emerald-400";
       } else {
         badge.className = "px-3 py-2 text-xs font-semibold rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center gap-1.5";
         dot.className = "w-2 h-2 rounded-full bg-rose-500";
-        txt.textContent = "SIN CONEXIÓN";
+        txt.textContent = "SIN RED";
+        hwWifi.className = "w-2 h-2 rounded-full bg-rose-500";
       }
     });
 
-    // --- Notificaciones Nativas del Celular / Navegador ---
-    function actualizarBotonNotif() {
-      const btn = document.getElementById("txt-notif");
-      if (!("Notification" in window)) {
-        btn.textContent = "🚫 No soportado";
+    // --- Gráfica Sísmica (Chart.js) ---
+    const ctx = document.getElementById("mpuChart").getContext("2d");
+    const maxPoints = 30;
+    const mpuChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: Array(maxPoints).fill(""),
+        datasets: [
+          {
+            label: "Δa (m/s²)",
+            data: Array(maxPoints).fill(0.05),
+            borderColor: "#34d399",
+            backgroundColor: "rgba(52, 211, 153, 0.14)",
+            borderWidth: 2.2,
+            tension: 0.35,
+            fill: true,
+            pointRadius: 0
+          },
+          {
+            label: "Umbral",
+            data: Array(maxPoints).fill(3.0),
+            borderColor: "rgba(244, 63, 94, 0.6)",
+            borderDash: [6, 6],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 200 },
+        scales: {
+          y: { min: 0, max: 6.5, grid: { color: "rgba(148,163,184,0.08)" }, ticks: { color: "#94a3b8", font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // --- Gráfica Donut ---
+    const donutChart = new Chart(document.getElementById("donutChart").getContext("2d"), {
+      type: "doughnut",
+      data: {
+        labels: ["Normal", "Alertas Robo", "PIN Erróneo"],
+        datasets: [{
+          data: [1, 0, 0],
+          backgroundColor: ["#10b981", "#f43f5e", "#f59e0b"],
+          borderColor: "#0b1121",
+          borderWidth: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "68%",
+        plugins: {
+          legend: { position: "right", labels: { color: "#cbd5e1", font: { size: 11 }, boxWidth: 10 } }
+        }
+      }
+    });
+
+    function actualizarDonut() {
+      donutChart.data.datasets[0].data = [stats.ok, stats.alerta, stats.fallos];
+      donutChart.update();
+    }
+
+    // --- Bucle Visual 3D + Telemetría ---
+    setInterval(() => {
+      const ruido = Math.random() * 0.08;
+      const valor = alertaGlobal ? Math.max(valorAcelActual, umbralActual + 0.7 + Math.random() * 1.2) : (valorAcelActual + ruido);
+
+      if (valor > picoMax) {
+        picoMax = valor;
+        document.getElementById("txt-pico").textContent = picoMax.toFixed(2);
+      }
+
+      mpuChart.data.datasets[0].data.push(valor);
+      mpuChart.data.datasets[0].data.shift();
+      mpuChart.data.datasets[1].data = Array(maxPoints).fill(umbralActual);
+      mpuChart.data.datasets[0].borderColor = alertaGlobal ? "#fb7185" : "#34d399";
+      mpuChart.data.datasets[0].backgroundColor = alertaGlobal ? "rgba(251, 113, 133, 0.2)" : "rgba(52, 211, 153, 0.14)";
+      mpuChart.update();
+
+      const txtAcel = document.getElementById("txt-acel");
+      txtAcel.textContent = valor.toFixed(2);
+      txtAcel.className = alertaGlobal ? "text-sm font-bold font-mono-tech text-rose-400 mt-0.5" : "text-sm font-bold font-mono-tech text-emerald-400 mt-0.5";
+
+      // Rotación dinámica del Cubo 3D
+      const cube = document.getElementById("cube-3d");
+      if (alertaGlobal) {
+        const rx = -20 + (Math.random() - 0.5) * 48;
+        const ry = 28 + (Math.random() - 0.5) * 56;
+        const rz = (Math.random() - 0.5) * 24;
+        cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
+        cube.classList.add("cube-alert");
+      } else {
+        const rx = -20 + (Math.random() - 0.5) * 3;
+        const ry = 28 + (Math.random() - 0.5) * 4;
+        cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+        cube.classList.remove("cube-alert");
+      }
+    }, 650);
+
+    // --- Logs ---
+    function renderizarLogs() {
+      const lista = document.getElementById("lista-logs");
+      const filtrados = historialLogs.filter(l => filtroActual === "todos" || l.tipo === filtroActual);
+      if (filtrados.length === 0) {
+        lista.innerHTML = `<div class="text-slate-500 italic py-4 text-center">Sin eventos registrados para este filtro.</div>`;
+        return;
+      }
+      lista.innerHTML = filtrados.map(l => {
+        const color = l.tipo === "alerta" ? "text-rose-300 border-rose-500/40 bg-rose-950/35"
+                    : l.tipo === "ok" ? "text-emerald-300 border-emerald-500/30 bg-emerald-950/30"
+                    : "text-slate-300 border-slate-800 bg-slate-900/60";
+        return `<div class="px-3 py-2 rounded-xl border ${color} flex justify-between items-center gap-2">
+                  <span>${l.mensaje}</span>
+                  <span class="text-[10px] opacity-70 shrink-0">${l.hora}</span>
+                </div>`;
+      }).join("");
+    }
+
+    function agregarLog(mensaje, tipo = "info") {
+      historialLogs.unshift({ fecha: new Date().toLocaleDateString(), hora: new Date().toLocaleTimeString(), mensaje, tipo });
+      renderizarLogs();
+    }
+
+    window.filtrarLogs = (tipo) => {
+      filtroActual = tipo;
+      ["todos", "alerta", "ok"].forEach(f => {
+        document.getElementById("f-" + f).className = f === tipo
+          ? "px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white"
+          : "px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700";
+      });
+      renderizarLogs();
+    };
+
+    window.limpiarLogs = () => {
+      historialLogs = [];
+      renderizarLogs();
+      mostrarToast("Consola limpiada.");
+    };
+
+    window.exportarCSV = () => {
+      if (historialLogs.length === 0) return mostrarToast("No hay eventos para exportar.", "alerta");
+      let csv = "Fecha,Hora,Tipo,Evento\n";
+      historialLogs.forEach(l => csv += `"${l.fecha}","${l.hora}","${l.tipo.toUpperCase()}","${l.mensaje.replace(/"/g, '""')}"\n`);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+      a.download = `VaultGuard_UTA_Logs_${Date.now()}.csv`;
+      a.click();
+      mostrarToast("Archivo CSV descargado.", "ok");
+    };
+
+    // --- Aplicar Estado Visual Completo ---
+    function aplicarEstadoVisual(data, esSimulacion = false) {
+      const txtEstado = document.getElementById("txt-estado");
+      const cardEstado = document.getElementById("card-estado");
+      const iconoEscudo = document.getElementById("icono-escudo");
+      const txtSensor = document.getElementById("txt-sensor");
+      const vaultCont = document.getElementById("vault-container");
+      const vaultRing = document.getElementById("vault-ring");
+      const vaultCore = document.getElementById("vault-core");
+      const badgeAmenaza = document.getElementById("badge-amenaza");
+      const hwMpu = document.getElementById("hw-mpu");
+      const hwServo = document.getElementById("hw-servo");
+      const hwBuzzer = document.getElementById("hw-buzzer");
+
+      const intentos = data.intentosFallidos ?? 0;
+      const estado = data.estado || "BLOQUEADA";
+      alertaGlobal = Boolean(data.alertaActiva);
+
+      txtEstado.textContent = estado;
+      document.getElementById("txt-intentos").textContent = `${intentos} / 3`;
+      document.getElementById("txt-evento").textContent = data.ultimoEvento || "Sin eventos";
+
+      if (alertaGlobal) {
+        document.documentElement.style.setProperty("--glow-color", "rgba(244, 63, 94, 0.25)");
+        txtEstado.className = "text-2xl sm:text-3xl font-black tracking-wider text-rose-500 font-cyber animate-pulse";
+        cardEstado.className = "lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between text-center transition-all border-rose-500/80 bg-rose-950/35";
+        iconoEscudo.className = "w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-500 flex items-center justify-center text-rose-400 alerta-ring shrink-0";
+        txtSensor.textContent = "¡INTRUSIÓN DETECTADA!";
+        txtSensor.className = "text-base font-extrabold text-rose-400 mt-0.5";
+        vaultCont.classList.remove("vault-open");
+        vaultCont.classList.add("shake-active");
+        vaultRing.setAttribute("stroke", "#f43f5e");
+        vaultCore.setAttribute("fill", "#f43f5e");
+        badgeAmenaza.textContent = "RIESGO: CRÍTICO";
+        badgeAmenaza.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse";
+        hwMpu.className = "w-2 h-2 rounded-full bg-rose-500 animate-ping";
+        hwBuzzer.className = "w-2 h-2 rounded-full bg-rose-500 animate-ping";
+        sonarAlarma();
+      } else if (estado === "ABIERTA") {
+        document.documentElement.style.setProperty("--glow-color", "rgba(245, 158, 11, 0.18)");
+        txtEstado.className = "text-2xl sm:text-3xl font-black tracking-wider text-amber-400 font-cyber";
+        cardEstado.className = "lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between text-center transition-all border-amber-500/45";
+        iconoEscudo.className = "w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0";
+        txtSensor.textContent = "Sensor Desarmado";
+        txtSensor.className = "text-base font-extrabold text-amber-400 mt-0.5";
+        vaultCont.classList.add("vault-open");
+        vaultCont.classList.remove("shake-active");
+        vaultRing.setAttribute("stroke", "#f59e0b");
+        vaultCore.setAttribute("fill", "#f59e0b");
+        badgeAmenaza.textContent = "BÓVEDA ABIERTA";
+        badgeAmenaza.className = "px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40";
+        hwMpu.className = "w-2 h-2 rounded-full bg-amber-400";
+        hwServo.className = "w-2 h-2 rounded-full bg-amber-400";
+        hwBuzzer.className = "w-2 h-2 rounded-full bg-slate-500";
+      } else {
+        document.documentElement.style.setProperty("--glow-color", "rgba(16, 185, 129, 0.14)");
+        txtEstado.className = "text-2xl sm:text-3xl font-black tracking-wider text-emerald-400 font-cyber";
+        cardEstado.className = "lg:col-span-4 glass rounded-2xl p-6 flex flex-col items-center justify-between text-center transition-all border-emerald-500/30";
+        iconoEscudo.className = "w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0";
+        txtSensor.textContent = "Estable en Reposo";
+        txtSensor.className = "text-base font-extrabold text-emerald-400 mt-0.5";
+        vaultCont.classList.remove("vault-open", "shake-active");
+        vaultRing.setAttribute("stroke", "#10b981");
+        vaultCore.setAttribute("fill", "#10b981");
+        badgeAmenaza.textContent = intentos > 0 ? "RIESGO: MEDIO" : "RIESGO: BAJO";
+        badgeAmenaza.className = intentos > 0
+          ? "px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40"
+          : "px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+        hwMpu.className = "w-2 h-2 rounded-full bg-emerald-400";
+        hwServo.className = "w-2 h-2 rounded-full bg-emerald-400";
+        hwBuzzer.className = "w-2 h-2 rounded-full bg-slate-500";
+      }
+
+      if (esSimulacion) {
+        agregarLog(`[DEMO - ${estado}] ${data.ultimoEvento}`, alertaGlobal ? "alerta" : "ok");
+        if (alertaGlobal) {
+          hablar("Atención. Intento de intrusión detectado en la bóveda.");
+          enviarNotificacionMovil("🚨 ALERTA CAJA FUERTE (DEMO)", data.ultimoEvento);
+        } else if (estado === "ABIERTA") {
+          hablar("Acceso autorizado. Bóveda abierta.");
+        } else {
+          hablar("Bóveda cerrada y asegurada.");
+        }
+      }
+    }
+
+    // --- Escucha Real de Firebase ---
+    onValue(cajaRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        document.getElementById("txt-estado").textContent = "SIN DATOS";
+        return;
+      }
+
+      if (typeof data.deltaA === "number") valorAcelActual = data.deltaA;
+      if (typeof data.claveActual === "string" && data.claveActual.length === 4) claveActualSistema = data.claveActual;
+      if (typeof data.umbral === "number") {
+        umbralActual = data.umbral;
+        document.getElementById("slider-umbral").value = umbralActual;
+        document.getElementById("val-umbral").textContent = `${umbralActual.toFixed(1)} m/s²`;
+      }
+
+      aplicarEstadoVisual(data, false);
+
+      if (data.ultimoEvento && data.ultimoEvento !== ultimoEventoGuardado) {
+        ultimoEventoGuardado = data.ultimoEvento;
+        const esAlerta = Boolean(data.alertaActiva);
+        agregarLog(`[${data.estado}] ${data.ultimoEvento}`, esAlerta ? "alerta" : "ok");
+
+        if (esAlerta) {
+          if ((data.ultimoEvento || "").toLowerCase().includes("clave")) stats.fallos++;
+          else stats.alerta++;
+          actualizarDonut();
+          hablar("Atención. " + data.ultimoEvento);
+          enviarNotificacionMovil("🚨 ALERTA CAJA FUERTE (UTA)", data.ultimoEvento);
+        } else {
+          stats.ok++;
+          actualizarDonut();
+          if (data.estado === "ABIERTA") hablar("Acceso autorizado. Bóveda abierta.");
+        }
+      }
+    });
+
+    // --- Modal Teclado PIN Táctico ---
+    window.abrirModalPin = () => {
+      pinModalBuffer = "";
+      document.getElementById("pin-display").textContent = "----";
+      const modal = document.getElementById("modal-pin");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    };
+
+    window.cerrarModalPin = () => {
+      const modal = document.getElementById("modal-pin");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    };
+
+    window.teclaPin = (num) => {
+      if (pinModalBuffer.length >= 4) return;
+      pinModalBuffer += num;
+      document.getElementById("pin-display").textContent = "*".repeat(pinModalBuffer.length).padEnd(4, "-");
+    };
+
+    window.borrarPinModal = () => {
+      pinModalBuffer = "";
+      document.getElementById("pin-display").textContent = "----";
+    };
+
+    window.validarPinModal = () => {
+      if (pinModalBuffer === claveActualSistema) {
+        cerrarModalPin();
+        update(cajaRef, { ordenAbrir: true, estado: "ABIERTA", alertaActiva: false, ultimoEvento: "Apertura remota autorizada por PIN" });
+        mostrarToast("PIN correcto. Abriendo bóveda...", "ok");
+      } else {
+        borrarPinModal();
+        mostrarToast("PIN incorrecto. Acceso denegado.", "alerta");
+        hablar("Código incorrecto. Acceso denegado.");
+      }
+    };
+
+    // --- Comandos Firebase ---
+    window.resetearAlerta = () => {
+      update(cajaRef, { alertaActiva: false, estado: "BLOQUEADA", intentosFallidos: 0, ultimoEvento: "Alerta revisada desde consola web" });
+      mostrarToast("Sistema restablecido y asegurado.", "ok");
+    };
+
+    window.activarPanico = () => {
+      update(cajaRef, { alertaActiva: true, estado: "BLOQUEO_PANICO", ultimoEvento: "Bloqueo de pánico activado remotamente" });
+      mostrarToast("¡Modo pánico activado!", "alerta");
+    };
+
+    window.actualizarUmbral = (val) => {
+      const num = parseFloat(val);
+      umbralActual = num;
+      update(cajaRef, { umbral: num });
+      mostrarToast(`Sensibilidad ajustada a ${num.toFixed(1)} m/s²`, "info");
+    };
+
+    window.cambiarPin = () => {
+      const input = document.getElementById("input-pin");
+      const pin = input.value.trim();
+      if (!/^\d{4}$/.test(pin)) return mostrarToast("El PIN debe tener exactamente 4 dígitos.", "alerta");
+      claveActualSistema = pin;
+      update(cajaRef, { claveActual: pin, ultimoEvento: "PIN maestro actualizado remotamente" });
+      input.value = "";
+      mostrarToast("PIN maestro actualizado en Firebase.", "ok");
+    };
+
+    // --- Simulador Local para Presentación ---
+    window.simularEstado = (tipo) => {
+      if (tipo === "alerta") {
+        valorAcelActual = 4.5;
+        stats.alerta++;
+        actualizarDonut();
+        aplicarEstadoVisual({ estado: "ALERTA_ROBO", ultimoEvento: "Movimiento brusco detectado (Simulación)", intentosFallidos: 2, alertaActiva: true }, true);
+      } else if (tipo === "abierta") {
+        valorAcelActual = 0.05;
+        stats.ok++;
+        actualizarDonut();
+        aplicarEstadoVisual({ estado: "ABIERTA", ultimoEvento: "Puerta abierta (Simulación)", intentosFallidos: 0, alertaActiva: false }, true);
+      } else {
+        valorAcelActual = 0.05;
+        aplicarEstadoVisual({ estado: "BLOQUEADA", ultimoEvento: "Bóveda asegurada (Simulación)", intentosFallidos: 0, alertaActiva: false }, true);
+      }
+    };
+  </script>
+</body>
+</html>

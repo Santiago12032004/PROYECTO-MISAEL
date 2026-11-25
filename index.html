@@ -3,147 +3,300 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VaultGuard ESP32 | Centro de Seguridad</title>
+  <title>VaultGuard ESP32 | UTA - FISEI</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --glow-color: rgba(16, 185, 129, 0.12);
+    }
     body {
       font-family: 'Inter', sans-serif;
-      background-color: #050814;
+      background-color: #040711;
       background-image:
-        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08), transparent 35%),
-        radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.08), transparent 35%),
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        radial-gradient(circle at 12% 10%, var(--glow-color), transparent 40%),
+        radial-gradient(circle at 88% 85%, rgba(99, 102, 241, 0.10), transparent 40%),
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+      transition: background-image 0.6s ease;
     }
     .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
     .glass {
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(13, 19, 36, 0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
     }
     @keyframes pulse-ring {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.75); }
       70% { transform: scale(1); box-shadow: 0 0 0 18px rgba(244, 63, 94, 0); }
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
     }
-    .alerta-ring { animation: pulse-ring 1.5s infinite; }
+    .alerta-ring { animation: pulse-ring 1.4s infinite; }
+
+    @keyframes radar-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .radar-sweep {
+      background: conic-gradient(from 0deg, rgba(52, 211, 153, 0.28) 0deg, transparent 70deg);
+      animation: radar-spin 3.5s linear infinite;
+    }
+    .radar-sweep-alert {
+      background: conic-gradient(from 0deg, rgba(244, 63, 94, 0.45) 0deg, transparent 70deg);
+      animation: radar-spin 1.2s linear infinite;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.6); }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen p-4 md:p-8">
+<body class="text-slate-100 min-h-screen p-3 sm:p-5 md:p-7">
 
-  <div class="max-w-5xl mx-auto space-y-6">
+  <div class="max-w-7xl mx-auto space-y-5">
 
-    <!-- Barra Superior -->
-    <header class="glass rounded-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <!-- 1. BANNER INSTITUCIONAL UTA -->
+    <div class="glass rounded-2xl px-5 py-3 border-t-2 border-t-red-700/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3.5 text-center sm:text-left">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-800 to-red-950 border border-red-500/40 flex flex-col items-center justify-center shadow-lg shadow-red-950/50 shrink-0">
+          <span class="text-xs font-black tracking-widest text-white leading-none">UTA</span>
+          <span class="text-[8px] font-mono-tech text-red-200 tracking-tighter mt-0.5">FISEI</span>
+        </div>
+        <div>
+          <h2 class="text-sm sm:text-base font-extrabold tracking-wide text-white uppercase">
+            Universidad Técnica de Ambato
+          </h2>
+          <p class="text-[11px] sm:text-xs text-slate-400">
+            Facultad de Ingeniería en Sistemas, Electrónica e Industrial • <span class="text-red-400 font-semibold">Ingeniería en Telecomunicaciones</span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-[11px] font-mono-tech text-slate-400 bg-slate-900/80 px-3 py-1.5 rounded-lg border border-slate-800">
+        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+        <span>PROYECTO IOT • SEGURIDAD INTELIGENTE</span>
+      </div>
+    </div>
+
+    <!-- 2. BARRA DE CONTROL PRINCIPAL -->
+    <header class="glass rounded-2xl px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div class="flex items-center gap-4">
-        <div id="icono-escudo" class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 transition-all">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <div id="icono-escudo" class="w-13 h-13 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 transition-all">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
         <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-xl font-extrabold tracking-tight">VaultGuard <span class="text-indigo-400">ESP32</span></h1>
-            <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">v2.0 PRO</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight">VaultGuard <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">ESP32</span></h1>
+            <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">v3.0 SOC</span>
           </div>
-          <p class="text-xs text-slate-400">Sistema de Telemetría y Seguridad Activa • MPU-6050 + Firebase</p>
+          <p class="text-xs text-slate-400">Centro de Monitoreo en Tiempo Real • Sensor MPU-6050 + Teclado Matricial + Firebase</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 flex-wrap">
-        <button id="btn-sonido" onclick="toggleSonido()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 border border-slate-700 flex items-center gap-2 transition">
-          <span id="txt-sonido">🔇 Sirena Web: OFF</span>
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <button id="btn-notif" onclick="activarNotificaciones()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/40 text-indigo-200 flex items-center gap-1.5 transition">
+          <span id="txt-notif">🔔 Notificaciones: OFF</span>
         </button>
-        <div class="px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs font-mono-tech text-slate-300" id="reloj">--:--:--</div>
-        <span id="badge-conexion" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> EN LÍNEA
+        <button id="btn-sonido" onclick="toggleSonido()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5 transition">
+          <span id="txt-sonido">🔇 Sirena: OFF</span>
+        </button>
+        <div class="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono-tech text-cyan-300" id="reloj">--:--:--</div>
+        <span id="badge-conexion" class="px-3 py-2 text-xs font-semibold rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1.5">
+          <span id="dot-conexion" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span id="txt-conexion">CONECTANDO</span>
         </span>
       </div>
     </header>
 
-    <!-- Grid Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- 3. TARJETAS KPI SUPERIORES -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-slate-400">Nivel de Amenaza</p>
+          <p id="txt-amenaza" class="text-xl font-extrabold font-mono-tech text-emerald-400 mt-1">BAJO</p>
+          <div class="flex gap-1 mt-2">
+            <span id="bar-1" class="h-1.5 w-7 rounded-full bg-emerald-500"></span>
+            <span id="bar-2" class="h-1.5 w-7 rounded-full bg-slate-700"></span>
+            <span id="bar-3" class="h-1.5 w-7 rounded-full bg-slate-700"></span>
+          </div>
+        </div>
+        <div class="text-2xl opacity-80">🛡️</div>
+      </div>
 
-      <!-- Columna Izquierda: Estado y Controles -->
-      <div class="lg:col-span-1 space-y-6">
-        <!-- Tarjeta de Estado -->
+      <div class="glass rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-slate-400">Intentos Fallidos</p>
+          <div class="flex items-baseline gap-1.5 mt-1">
+            <p id="txt-intentos" class="text-2xl font-extrabold font-mono-tech text-white">0</p>
+            <span class="text-xs text-slate-500">/ 3 máx</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Teclado matricial 4x4</p>
+        </div>
+        <div class="text-2xl opacity-80">🔢</div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-slate-400">Pico Máx. MPU-6050</p>
+          <p id="txt-pico" class="text-2xl font-extrabold font-mono-tech text-cyan-400 mt-1">0.00</p>
+          <p class="text-[11px] text-slate-400 mt-1">m/s² registrados hoy</p>
+        </div>
+        <div class="text-2xl opacity-80">📈</div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] uppercase tracking-wider text-slate-400">Alertas de Sesión</p>
+          <p id="txt-total-alertas" class="text-2xl font-extrabold font-mono-tech text-rose-400 mt-1">0</p>
+          <p id="txt-uptime" class="text-[11px] font-mono-tech text-slate-400 mt-1">Activo: 00:00:00</p>
+        </div>
+        <div class="text-2xl opacity-80">🚨</div>
+      </div>
+    </div>
+
+    <!-- 4. GRID PRINCIPAL -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+      <!-- COLUMNA IZQUIERDA (4 cols): Estado + Radar + Comandos -->
+      <div class="lg:col-span-4 space-y-5">
+
+        <!-- Tarjeta de Estado Principal -->
         <div id="card-estado" class="glass rounded-2xl p-6 text-center transition-all border-emerald-500/30">
-          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Estado de la Bóveda</p>
-          <h2 id="txt-estado" class="text-3xl font-extrabold mt-2 tracking-tight text-emerald-400 font-mono-tech">CARGANDO...</h2>
-          <p id="txt-evento" class="text-xs text-slate-300 mt-3 bg-slate-900/70 py-2 px-3 rounded-lg border border-slate-800">
+          <p class="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Estado de la Bóveda</p>
+          <h2 id="txt-estado" class="text-3xl font-black mt-2 tracking-tight text-emerald-400 font-mono-tech">CARGANDO...</h2>
+          <p id="txt-evento" class="text-xs text-slate-300 mt-3 bg-slate-950/70 py-2.5 px-3 rounded-xl border border-slate-800">
             Esperando sincronización con ESP32...
           </p>
         </div>
 
-        <!-- Métricas Rápidas -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="glass rounded-2xl p-4">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400">Intentos Fallidos</p>
-            <div class="flex items-baseline justify-between mt-1">
-              <p id="txt-intentos" class="text-3xl font-bold font-mono-tech text-white">0</p>
-              <span class="text-xs text-slate-500">/ 3 máx</span>
-            </div>
+        <!-- Radar de Estabilidad MPU-6050 -->
+        <div class="glass rounded-2xl p-5 flex items-center gap-5">
+          <div class="relative w-24 h-24 rounded-full border border-slate-700 bg-slate-950/90 flex items-center justify-center overflow-hidden shrink-0">
+            <div id="radar-sweep" class="absolute inset-0 radar-sweep"></div>
+            <div class="absolute w-16 h-16 rounded-full border border-slate-800"></div>
+            <div class="absolute w-8 h-8 rounded-full border border-slate-800"></div>
+            <div class="absolute w-full h-px bg-slate-800/80"></div>
+            <div class="absolute h-full w-px bg-slate-800/80"></div>
+            <div id="radar-dot" class="w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/70 transition-transform duration-300 z-10"></div>
           </div>
-          <div class="glass rounded-2xl p-4">
-            <p class="text-[11px] uppercase tracking-wider text-slate-400">Giroscopio</p>
-            <p id="txt-sensor" class="text-lg font-bold mt-2 text-emerald-400">Estable</p>
-            <p id="txt-acel" class="text-[11px] font-mono-tech text-slate-400 mt-0.5">Δa: 0.00 m/s²</p>
+          <div class="flex-1 min-w-0">
+            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Radar Giroscopio</p>
+            <p id="txt-sensor" class="text-lg font-extrabold text-emerald-400 mt-0.5">Estable</p>
+            <p id="txt-acel" class="text-xs font-mono-tech text-slate-300 mt-1">Δa: 0.00 m/s²</p>
+            <p class="text-[11px] text-slate-500 mt-1">Umbral activo: <span id="lbl-umbral-mini" class="text-indigo-300 font-mono-tech">3.0</span> m/s²</p>
           </div>
         </div>
 
-        <!-- Panel de Control Remoto -->
+        <!-- Comandos Remotos -->
         <div class="glass rounded-2xl p-5 space-y-3">
-          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-2">Comandos Remotos</p>
+          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Comandos Remotos</p>
 
-          <button onclick="resetearAlerta()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+          <button onclick="resetearAlerta()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25">
             <span>✓</span> Marcar Alerta como Revisada
           </button>
 
           <div class="grid grid-cols-2 gap-3">
-            <button onclick="abrirRemoto()" class="py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-semibold text-xs transition">
+            <button onclick="abrirRemoto()" class="py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/40 text-emerald-300 font-semibold text-xs transition">
               🔓 Abrir Remoto
             </button>
-            <button onclick="activarPanico()" class="py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 font-semibold text-xs transition">
+            <button onclick="activarPanico()" class="py-2.5 px-3 rounded-xl bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/40 text-rose-300 font-semibold text-xs transition">
               🚨 Bloqueo Pánico
             </button>
           </div>
         </div>
+
+        <!-- Configuración Remota -->
+        <div class="glass rounded-2xl p-5 space-y-4">
+          <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold">Configuración de Seguridad</p>
+
+          <!-- Sensibilidad MPU -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="text-slate-300">Sensibilidad MPU-6050</span>
+              <span id="val-umbral" class="font-mono-tech text-cyan-300 font-bold">3.0 m/s²</span>
+            </div>
+            <input id="slider-umbral" type="range" min="1.0" max="6.0" step="0.5" value="3.0"
+              oninput="document.getElementById('val-umbral').textContent = this.value + ' m/s²'"
+              onchange="actualizarUmbral(this.value)"
+              class="w-full accent-indigo-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 font-mono-tech mt-0.5">
+              <span>Alta (1.0)</span>
+              <span>Media (3.0)</span>
+              <span>Baja (6.0)</span>
+            </div>
+          </div>
+
+          <!-- Cambiar PIN -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <label class="text-xs text-slate-300 block mb-1.5">Actualizar PIN de Acceso (4 dígitos)</label>
+            <div class="flex gap-2">
+              <input id="input-pin" type="password" maxlength="4" placeholder="Ej: 4829"
+                class="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-700 text-sm font-mono-tech text-white focus:outline-none focus:border-indigo-500">
+              <button onclick="cambiarPin()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-indigo-600 border border-slate-700 text-xs font-semibold transition shrink-0">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Columna Derecha: Gráfica MPU-6050 + Historial -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Gráfica en Vivo -->
+      <!-- COLUMNA DERECHA (8 cols): Gráfica en vivo + Consola de Auditoría -->
+      <div class="lg:col-span-8 space-y-5">
+
+        <!-- Gráfica MPU-6050 -->
         <div class="glass rounded-2xl p-5">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <h3 class="text-sm font-bold text-slate-200">Monitor Sísmico / Inclinación (MPU-6050)</h3>
-              <p class="text-xs text-slate-400">Variación de aceleración en tiempo real (Umbral de alerta: 3.0 m/s²)</p>
+              <h3 class="text-sm font-bold text-slate-100">Monitor Sísmico / Aceleración Vectorial (MPU-6050)</h3>
+              <p class="text-xs text-slate-400">Telemetría continua con línea de referencia de umbral de intrusión</p>
             </div>
-            <span class="text-[11px] font-mono-tech px-2.5 py-1 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">LIVE FEED</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-mono-tech px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">I2C: 0x68</span>
+              <span class="text-[10px] font-mono-tech px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">LIVE FEED</span>
+            </div>
           </div>
-          <div class="h-52 w-full">
+          <div class="h-64 w-full">
             <canvas id="mpuChart"></canvas>
           </div>
         </div>
 
-        <!-- Consola de Eventos -->
+        <!-- Registro de Auditoría (Logs) -->
         <div class="glass rounded-2xl p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-bold text-slate-200">Registro de Auditoría (Logs)</h3>
-            <button onclick="limpiarLogs()" class="text-xs text-slate-400 hover:text-slate-200 transition">Limpiar</button>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Registro de Auditoría y Eventos (Logs)</h3>
+              <p class="text-xs text-slate-400">Historial cronológico de accesos, comandos y alertas del sistema</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button onclick="filtrarLogs('todos')" id="f-todos" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white transition">Todos</button>
+              <button onclick="filtrarLogs('alerta')" id="f-alerta" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Alertas</button>
+              <button onclick="filtrarLogs('ok')" id="f-ok" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Accesos</button>
+              <button onclick="exportarCSV()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/35 transition">⬇ CSV</button>
+              <button onclick="limpiarLogs()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-rose-300 transition">Limpiar</button>
+            </div>
           </div>
-          <div id="lista-logs" class="h-44 overflow-y-auto space-y-2 pr-1 font-mono-tech text-xs">
-            <div class="text-slate-500 italic">Iniciando escucha en Firebase Realtime Database...</div>
+          <div id="lista-logs" class="h-64 overflow-y-auto space-y-2 pr-1 font-mono-tech text-xs">
+            <div class="text-slate-500 italic py-4 text-center">Iniciando escucha en Firebase Realtime Database...</div>
           </div>
         </div>
-      </div>
 
+      </div>
     </div>
+
+    <!-- Pie de página -->
+    <footer class="text-center text-[11px] text-slate-500 py-2 font-mono-tech">
+      VaultGuard ESP32 • Universidad Técnica de Ambato (FISEI) • Ingeniería en Telecomunicaciones
+    </footer>
   </div>
+
+  <!-- Contenedor de Toast -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
 
   <!-- Firebase SDK + Lógica -->
   <script type="module">
@@ -157,169 +310,62 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const cajaRef = ref(db, "caja");
+    const connectedRef = ref(db, ".info/connected");
 
-    // --- Reloj en tiempo real ---
+    // --- Variables de Estado ---
+    let valorAcelActual = 0.05;
+    let umbralActual = 3.0;
+    let picoMax = 0.0;
+    let totalAlertas = 0;
+    let alertaGlobal = false;
+    let ultimoEventoGuardado = "";
+    let filtroActual = "todos";
+    let historialLogs = [];
+    const inicioSesion = Date.now();
+
+    // --- Toast elegante ---
+    function mostrarToast(texto, tipo = "info") {
+      const cont = document.getElementById("toast-container");
+      const el = document.createElement("div");
+      const colores = tipo === "alerta"
+        ? "bg-rose-950/95 border-rose-500/60 text-rose-200"
+        : tipo === "ok"
+        ? "bg-emerald-950/95 border-emerald-500/60 text-emerald-200"
+        : "bg-slate-900/95 border-indigo-500/50 text-slate-100";
+      el.className = `px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-2xl backdrop-blur-md transition-all ${colores}`;
+      el.textContent = texto;
+      cont.appendChild(el);
+      setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3200);
+    }
+
+    // --- Reloj y Uptime ---
     setInterval(() => {
       document.getElementById("reloj").textContent = new Date().toLocaleTimeString();
+      const seg = Math.floor((Date.now() - inicioSesion) / 1000);
+      const h = String(Math.floor(seg / 3600)).padStart(2, "0");
+      const m = String(Math.floor((seg % 3600) / 60)).padStart(2, "0");
+      const s = String(seg % 60).padStart(2, "0");
+      document.getElementById("txt-uptime").textContent = `Activo: ${h}:${m}:${s}`;
     }, 1000);
 
-    // --- Gráfica Chart.js ---
-    const ctx = document.getElementById("mpuChart").getContext("2d");
-    const maxPoints = 25;
-    const labels = Array(maxPoints).fill("");
-    const dataPoints = Array(maxPoints).fill(0.05);
-
-    const mpuChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Δa (m/s²)",
-          data: dataPoints,
-          borderColor: "#34d399",
-          backgroundColor: "rgba(52, 211, 153, 0.12)",
-          borderWidth: 2,
-          tension: 0.35,
-          fill: true,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 250 },
-        scales: {
-          y: { min: 0, max: 5, grid: { color: "rgba(148,163,184,0.08)" }, ticks: { color: "#94a3b8", font: { size: 10 } } },
-          x: { grid: { display: false }, ticks: { display: false } }
-        },
-        plugins: { legend: { display: false } }
-      }
-    });
-
-    let valorAcelActual = 0.05;
-    let alertaGlobal = false;
-
-    setInterval(() => {
-      const ruido = (Math.random() * 0.08);
-      const valor = alertaGlobal ? Math.max(valorAcelActual, 3.6 + Math.random() * 0.9) : (valorAcelActual + ruido);
-      mpuChart.data.datasets[0].data.push(valor);
-      mpuChart.data.datasets[0].data.shift();
-      mpuChart.data.datasets[0].borderColor = alertaGlobal ? "#fb7185" : "#34d399";
-      mpuChart.data.datasets[0].backgroundColor = alertaGlobal ? "rgba(251, 113, 133, 0.18)" : "rgba(52, 211, 153, 0.12)";
-      mpuChart.update();
-      document.getElementById("txt-acel").textContent = `Δa: ${valor.toFixed(2)} m/s²`;
-    }, 800);
-
-    // --- Sirena Web Audio API ---
-    let sonidoActivo = false;
-    let audioCtx = null;
-
-    window.toggleSonido = () => {
-      sonidoActivo = !sonidoActivo;
-      document.getElementById("txt-sonido").textContent = sonidoActivo ? "🔊 Sirena Web: ON" : "🔇 Sirena Web: OFF";
-      if (sonidoActivo && !audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    };
-
-    function sonarAlarma() {
-      if (!sonidoActivo || !audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.4);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.45);
-    }
-
-    // --- Logs ---
-    function agregarLog(mensaje, tipo = "info") {
-      const lista = document.getElementById("lista-logs");
-      if (lista.children.length === 1 && lista.children[0].classList.contains("italic")) {
-        lista.innerHTML = "";
-      }
-      const hora = new Date().toLocaleTimeString();
-      const color = tipo === "alerta" ? "text-rose-400 border-rose-500/30 bg-rose-950/30"
-                  : tipo === "ok" ? "text-emerald-400 border-emerald-500/30 bg-emerald-950/30"
-                  : "text-slate-300 border-slate-800 bg-slate-900/50";
-      const item = document.createElement("div");
-      item.className = `px-3 py-2 rounded-lg border ${color} flex justify-between items-center`;
-      item.innerHTML = `<span>${mensaje}</span><span class="text-[10px] opacity-70 ml-2">${hora}</span>`;
-      lista.prepend(item);
-    }
-
-    window.limpiarLogs = () => {
-      document.getElementById("lista-logs").innerHTML = `<div class="text-slate-500 italic">Registro limpiado. Esperando nuevos eventos...</div>`;
-    };
-
-    // --- Escucha en Tiempo Real de Firebase ---
-    let ultimoEventoGuardado = "";
-
-    onValue(cajaRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        document.getElementById("txt-estado").textContent = "SIN DATOS";
-        return;
-      }
-
-      const txtEstado = document.getElementById("txt-estado");
-      const cardEstado = document.getElementById("card-estado");
-      const iconoEscudo = document.getElementById("icono-escudo");
-      const txtSensor = document.getElementById("txt-sensor");
-
-      txtEstado.textContent = data.estado || "BLOQUEADA";
-      document.getElementById("txt-intentos").textContent = data.intentosFallidos ?? 0;
-      document.getElementById("txt-evento").textContent = data.ultimoEvento || "Sin eventos";
-      if (typeof data.deltaA === "number") valorAcelActual = data.deltaA;
-
-      alertaGlobal = Boolean(data.alertaActiva);
-
-      if (alertaGlobal) {
-        txtEstado.className = "text-3xl font-extrabold mt-2 tracking-tight text-rose-500 font-mono-tech animate-pulse";
-        cardEstado.className = "glass rounded-2xl p-6 text-center transition-all border-rose-500/60 bg-rose-950/30";
-        iconoEscudo.className = "w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-500 flex items-center justify-center text-rose-400 alerta-ring";
-        txtSensor.textContent = "¡INTRUSIÓN!";
-        txtSensor.className = "text-lg font-bold mt-2 text-rose-400";
-        sonarAlarma();
-      } else if (data.estado === "ABIERTA") {
-        txtEstado.className = "text-3xl font-extrabold mt-2 tracking-tight text-amber-400 font-mono-tech";
-        cardEstado.className = "glass rounded-2xl p-6 text-center transition-all border-amber-500/40";
-        iconoEscudo.className = "w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400";
-        txtSensor.textContent = "Desarmado";
-        txtSensor.className = "text-lg font-bold mt-2 text-amber-400";
+    // --- Estado Real de Conexión a Firebase ---
+    onValue(connectedRef, (snap) => {
+      const badge = document.getElementById("badge-conexion");
+      const dot = document.getElementById("dot-conexion");
+      const txt = document.getElementById("txt-conexion");
+      if (snap.val() === true) {
+        badge.className = "px-3 py-2 text-xs font-semibold rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
+        txt.textContent = "EN LÍNEA";
       } else {
-        txtEstado.className = "text-3xl font-extrabold mt-2 tracking-tight text-emerald-400 font-mono-tech";
-        cardEstado.className = "glass rounded-2xl p-6 text-center transition-all border-emerald-500/30";
-        iconoEscudo.className = "w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400";
-        txtSensor.textContent = "Estable";
-        txtSensor.className = "text-lg font-bold mt-2 text-emerald-400";
-      }
-
-      if (data.ultimoEvento && data.ultimoEvento !== ultimoEventoGuardado) {
-        ultimoEventoGuardado = data.ultimoEvento;
-        agregarLog(`[${data.estado}] ${data.ultimoEvento}`, alertaGlobal ? "alerta" : "ok");
+        badge.className = "px-3 py-2 text-xs font-semibold rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center gap-1.5";
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        txt.textContent = "SIN CONEXIÓN";
       }
     });
 
-    // --- Comandos Remotos ---
-    window.resetearAlerta = () => {
-      update(cajaRef, { alertaActiva: false, estado: "BLOQUEADA", intentosFallidos: 0, ultimoEvento: "Alerta revisada desde la web" });
-    };
-
-    window.abrirRemoto = () => {
-      if (confirm("¿Seguro que deseas enviar la orden de apertura remota a la caja fuerte?")) {
-        update(cajaRef, { ordenAbrir: true, estado: "ABIERTA", alertaActiva: false, ultimoEvento: "Apertura remota autorizada" });
-      }
-    };
-
-    window.activarPanico = () => {
-      update(cajaRef, { alertaActiva: true, estado: "BLOQUEO_PANICO", ultimoEvento: "Bloqueo de pánico activado desde la web" });
-    };
-  </script>
-</body>
-</html>
+    // --- Notificaciones Nativas del Celular / Navegador ---
+    function actualizarBotonNotif() {
+      const btn = document.getElementById("txt-notif");
+      if (!("Notification" in window)) {
+        btn.textContent = "🚫 No soportado";

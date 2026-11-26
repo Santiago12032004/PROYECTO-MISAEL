@@ -2,460 +2,559 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#030610" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>VaultGuard ESP32 | UTA - FISEI</title>
-  <link id="pwa-manifest" rel="manifest" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#05080f" />
+  <title>VaultGuard Pro — Consola de Seguridad ESP32</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root { --glow-color: rgba(16, 185, 129, 0.14); }
+    :root {
+      --bg-0: #05080f;
+      --surface: rgba(15, 23, 42, 0.72);
+      --surface-hover: rgba(30, 41, 59, 0.75);
+      --border: rgba(148, 163, 184, 0.14);
+      --border-hi: rgba(56, 189, 248, 0.4);
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-mute: #64748b;
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.25);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.3);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.65);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #030610;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-0);
       background-image:
-        radial-gradient(circle at 10% 8%, var(--glow-color), transparent 42%),
-        radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.12), transparent 42%),
-        linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+        radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.13), transparent 36%),
+        radial-gradient(circle at 88% 90%, rgba(16, 185, 129, 0.09), transparent 40%),
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text);
+      padding: 18px;
+      line-height: 1.5;
     }
-    .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-    .font-cyber { font-family: 'Orbitron', sans-serif; }
-    .glass {
-      background: rgba(11, 17, 33, 0.78);
+
+    .shell { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+
+    .panel {
+      background: var(--surface);
       backdrop-filter: blur(18px);
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      box-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.75);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
     }
-    @keyframes shake-alert {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px) rotate(-1deg); }
-      75% { transform: translateX(4px) rotate(1deg); }
+
+    .topbar { padding: 16px 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo-badge {
+      width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(16, 185, 129, 0.16));
+      border: 1px solid var(--border-hi); color: var(--cyan);
     }
-    .shake-active { animation: shake-alert 0.35s infinite; }
-    .scene-3d { width: 106px; height: 106px; perspective: 480px; }
-    .cube-3d {
-      width: 100%; height: 100%; position: relative;
-      transform-style: preserve-3d; transform: rotateX(-20deg) rotateY(28deg);
-      transition: transform 0.2s ease-out;
+    .brand-title { display: flex; align-items: center; gap: 8px; }
+    .brand-title h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
+    .version-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 2px 7px; border-radius: 6px;
+      background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--cyan); font-weight: 700;
     }
-    .cube-face {
-      position: absolute; width: 106px; height: 106px;
-      border: 1.5px solid rgba(52, 211, 153, 0.6);
-      background: rgba(16, 185, 129, 0.08);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'JetBrains Mono', monospace; font-size: 10px;
-      color: rgba(167, 243, 208, 0.85);
+    .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: var(--text-dim); }
+    .top-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 999px;
+      background: rgba(5, 8, 15, 0.75); border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--text-dim);
     }
-    .cube-alert .cube-face {
-      border-color: rgba(244, 63, 94, 0.85);
-      background: rgba(244, 63, 94, 0.16);
-      color: rgba(254, 205, 211, 0.95);
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+    .status-pill.online { border-color: rgba(16, 185, 129, 0.35); color: #a7f3d0; }
+    .status-pill.online .status-dot { background: var(--emerald); box-shadow: 0 0 12px var(--emerald); }
+
+    button {
+      font-family: inherit; cursor: pointer; border: none; border-radius: var(--radius-sm); font-weight: 600;
+      transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    .face-front  { transform: rotateY(0deg) translateZ(53px); }
-    .face-back   { transform: rotateY(180deg) translateZ(53px); }
-    .face-right  { transform: rotateY(90deg) translateZ(53px); }
-    .face-left   { transform: rotateY(-90deg) translateZ(53px); }
-    .face-top    { transform: rotateX(90deg) translateZ(53px); }
-    .face-bottom { transform: rotateX(-90deg) translateZ(53px); }
-    #vault-wheel { transform-origin: 100px 100px; transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
-    .vault-open #vault-wheel { transform: rotate(135deg); }
-    .vault-bolt { transition: transform 0.5s ease; }
-    .vault-open .bolt-top { transform: translateY(10px); }
-    .vault-open .bolt-bottom { transform: translateY(-10px); }
-    .vault-open .bolt-left { transform: translateX(10px); }
-    .vault-open .bolt-right { transform: translateX(-10px); }
+    button:active { transform: scale(0.97); }
+
+    .btn-icon {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; font-size: 0.8rem;
+      background: rgba(30, 41, 59, 0.65); color: var(--text); border: 1px solid var(--border);
+    }
+    .btn-icon:hover { background: var(--surface-hover); border-color: var(--border-hi); }
+    .btn-icon.active-toggle { background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.45); color: #bae6fd; }
+
+    .hero { padding: 24px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; position: relative; overflow: hidden; }
+    .hero::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--emerald); transition: background 0.3s ease; }
+    .hero.state-open::after { background: var(--cyan); }
+    .hero.state-alert::after, .hero.state-panic::after { background: var(--rose); }
+
+    .vault-ring {
+      width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(16, 185, 129, 0.08); border: 2px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 0 32px var(--emerald-glow); color: var(--emerald); transition: all 0.3s ease;
+    }
+    .hero.state-open .vault-ring { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.55); box-shadow: 0 0 36px var(--cyan-glow); color: var(--cyan); }
+    .hero.state-alert .vault-ring, .hero.state-panic .vault-ring {
+      background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.65);
+      box-shadow: 0 0 40px var(--rose-glow); color: var(--rose); animation: pulse-danger 1.4s infinite;
+    }
+
+    @keyframes pulse-danger {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 24px var(--rose-glow); }
+      50% { transform: scale(1.04); box-shadow: 0 0 44px rgba(244, 63, 94, 0.55); }
+    }
+
+    .hero-info .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-mute); margin-bottom: 4px; }
+    .hero-state { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.55rem, 3.2vw, 2.3rem); font-weight: 700; letter-spacing: -0.02em; color: #6ee7b7; line-height: 1.15; }
+    .hero.state-open .hero-state { color: #7dd3fc; }
+    .hero.state-alert .hero-state, .hero.state-panic .hero-state { color: #fda4af; }
+    .hero-event { margin-top: 6px; font-size: 0.94rem; color: var(--text-dim); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(135px, 1fr)); gap: 10px; }
+    .kpi { background: rgba(5, 8, 15, 0.55); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; }
+    .kpi-label { font-size: 0.72rem; color: var(--text-mute); margin-bottom: 4px; display: block; }
+    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .attempt-dots { display: inline-flex; gap: 5px; }
+    .attempt-dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(148, 163, 184, 0.2); display: inline-block; }
+    .attempt-dots i.filled { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+
+    .workspace { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 18px; }
+    .card { padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .card-head h2 { font-size: 1rem; font-weight: 700; }
+    .card-head span { font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; color: var(--text-mute); }
+
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; background: rgba(5, 8, 15, 0.65); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
+    .tab-btn { padding: 10px; font-size: 0.84rem; background: transparent; color: var(--text-dim); border-radius: 9px; }
+    .tab-btn.active { background: rgba(56, 189, 248, 0.16); color: #e0f2fe; border: 1px solid rgba(56, 189, 248, 0.35); }
+
+    .pin-display { background: rgba(5, 8, 15, 0.75); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .pin-caption { font-size: 0.78rem; color: var(--text-dim); text-align: center; }
+    .pin-dots { display: flex; gap: 16px; }
+    .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(148, 163, 184, 0.35); transition: all 0.16s ease; }
+    .pin-dot.filled { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 14px var(--cyan-glow); transform: scale(1.1); }
+    .pin-dot.error { background: var(--rose); border-color: var(--rose); box-shadow: 0 0 14px var(--rose-glow); }
+
+    .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .key-btn {
+      height: 56px; font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700;
+      background: rgba(30, 41, 59, 0.55); color: var(--text); border: 1px solid var(--border); border-radius: 13px;
+    }
+    .key-btn:hover { background: rgba(51, 65, 85, 0.7); border-color: rgba(148, 163, 184, 0.35); }
+    .key-btn.key-action { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem; font-weight: 700; }
+    .key-btn.key-submit { background: linear-gradient(135deg, #0284c7, #0ea5e9); border-color: transparent; color: #fff; box-shadow: 0 10px 24px rgba(14, 165, 233, 0.28); }
+    .key-btn.key-submit.mode-save { background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25); }
+
+    .emergency-bar { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .btn-panic {
+      padding: 14px 16px; background: rgba(244, 63, 94, 0.12); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4);
+      border-radius: 13px; font-size: 0.88rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-panic:hover { background: rgba(244, 63, 94, 0.22); }
+    .btn-panic.active { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; border-color: transparent; box-shadow: 0 10px 28px rgba(244, 63, 94, 0.38); }
+
+    .log-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .filter-group { display: flex; gap: 6px; }
+    .chip { padding: 6px 11px; font-size: 0.75rem; border-radius: 999px; background: rgba(5, 8, 15, 0.6); color: var(--text-dim); border: 1px solid var(--border); }
+    .chip.active { background: rgba(56, 189, 248, 0.16); color: #bae6fd; border-color: rgba(56, 189, 248, 0.4); }
+
+    .log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 390px; overflow-y: auto; padding-right: 4px; }
+    .log-item {
+      background: rgba(5, 8, 15, 0.55); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+      border-radius: 12px; padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    }
+    .log-item.type-alert { border-left-color: var(--rose); }
+    .log-item.type-access { border-left-color: var(--emerald); }
+    .log-item strong { display: block; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .log-item p { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
+    .log-time { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-mute); white-space: nowrap; }
+    .empty-log { text-align: center; padding: 36px 16px; color: var(--text-mute); font-size: 0.86rem; }
+
+    .toast {
+      position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 16px);
+      background: #0f172a; color: var(--text); border: 1px solid var(--border-hi);
+      padding: 12px 20px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
+      box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: all 0.22s ease; z-index: 100; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 920px) {
+      .hero { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+      .kpi-grid { width: 100%; }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .topbar, .hero, .card { padding: 16px; }
+      .key-btn { height: 52px; }
+    }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen p-3 sm:p-5">
-
-  <div class="max-w-6xl mx-auto space-y-4">
-
-    <!-- BANNER INSTITUCIONAL UTA -->
-    <div class="glass rounded-2xl px-4 py-3 border-t-2 border-t-red-600/90 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-3 text-center sm:text-left">
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-red-700 to-red-950 border border-red-400/40 flex flex-col items-center justify-center shrink-0">
-          <span class="text-xs font-black text-white font-cyber">UTA</span>
-          <span class="text-[8px] font-mono-tech text-red-200">FISEI</span>
+<body>
+  <div class="shell">
+    <header class="panel topbar">
+      <div class="brand">
+        <div class="logo-badge" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+          </svg>
         </div>
         <div>
-          <h2 class="text-sm sm:text-base font-extrabold text-white uppercase">Universidad Técnica de Ambato</h2>
-          <p class="text-[11px] text-slate-400">FISEI • <span class="text-red-400 font-semibold">Ingeniería en Telecomunicaciones</span></p>
+          <div class="brand-title"><h1>VaultGuard Pro</h1><span class="version-tag">v2.0</span></div>
+          <div class="brand-sub">ESP32 SMART SAFE · FIREBASE RTDB</div>
         </div>
       </div>
-      <span id="badge-conexion" class="px-3 py-1.5 text-xs font-semibold rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1.5">
-        <span id="dot-conexion" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-        <span id="txt-conexion">CONECTANDO</span>
-      </span>
-    </div>
 
-    <!-- BARRA DE COMANDO -->
-    <header class="glass rounded-2xl px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-      <div>
-        <h1 class="text-lg sm:text-xl font-black font-cyber">
-          VAULTGUARD <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">CLOUD SOC</span>
-        </h1>
-        <p class="text-[11px] text-slate-400">Notificaciones Push Móviles + Telemetría 3D + Firebase</p>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="activarNotificaciones()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30">
-          <span id="txt-notif">🔔 Activar Notificaciones</span>
-        </button>
-        <button onclick="toggleVoz()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-600/15 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-200">
-          <span id="txt-voz">🗣️ Voz: OFF</span>
-        </button>
-        <button onclick="toggleSonido()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700">
-          <span id="txt-sonido">🔇 Sirena: OFF</span>
-        </button>
-        <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono-tech text-cyan-300" id="reloj">--:--:--</div>
+      <div class="top-controls">
+        <div id="connPill" class="status-pill"><span class="status-dot"></span><span id="connText">Conectando...</span></div>
+        <button id="btnSound" class="btn-icon active-toggle" type="button"><span id="soundLabel">Sonido ON</span></button>
+        <button id="btnNotif" class="btn-icon" type="button"><span id="notifLabel">Notificaciones</span></button>
       </div>
     </header>
 
-    <!-- FILA HERO -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <!-- Bóveda SVG -->
-      <div class="lg:col-span-4 glass rounded-2xl p-5 flex flex-col items-center justify-between text-center">
-        <div class="w-full flex justify-between text-[11px] font-mono-tech text-slate-400">
-          <span>BÓVEDA</span>
-          <span id="txt-intentos" class="text-white">Fallos: 0 / 3</span>
-        </div>
-
-        <div id="vault-container" class="my-2">
-          <svg width="155" height="155" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" fill="#091022" stroke="#1e293b" stroke-width="6"/>
-            <circle id="vault-ring" cx="100" cy="100" r="78" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="10 6"/>
-            <rect class="vault-bolt bolt-top" x="94" y="14" width="12" height="22" rx="3" fill="#64748b"/>
-            <rect class="vault-bolt bolt-bottom" x="94" y="164" width="12" height="22" rx="3" fill="#64748b"/>
-            <rect class="vault-bolt bolt-left" x="14" y="94" width="22" height="12" rx="3" fill="#64748b"/>
-            <rect class="vault-bolt bolt-right" x="164" y="94" width="22" height="12" rx="3" fill="#64748b"/>
-            <g id="vault-wheel">
-              <circle cx="100" cy="100" r="46" fill="#0f172a" stroke="#475569" stroke-width="5"/>
-              <line x1="100" y1="54" x2="100" y2="146" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
-              <line x1="54" y1="100" x2="146" y2="100" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
-              <circle id="vault-core" cx="100" cy="100" r="16" fill="#10b981" stroke="#0f172a" stroke-width="4"/>
-            </g>
-          </svg>
-        </div>
-
-        <div class="w-full">
-          <h2 id="txt-estado" class="text-2xl font-black text-emerald-400 font-cyber">CARGANDO...</h2>
-          <p id="txt-evento" class="text-xs text-slate-300 mt-2 bg-slate-950/80 py-2 px-3 rounded-xl border border-slate-800 truncate">Sincronizando...</p>
-        </div>
+    <section id="heroCard" class="panel hero">
+      <div class="vault-ring" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path id="lockShackle" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
       </div>
 
-      <!-- Visor 3D MPU-6050 -->
-      <div class="lg:col-span-4 glass rounded-2xl p-5 flex flex-col justify-between gap-3">
-        <div class="flex justify-between items-center">
-          <div>
-            <p class="text-[11px] uppercase text-slate-400 font-semibold">Orientación 3D</p>
-            <p id="txt-sensor" class="text-sm font-extrabold text-emerald-400">Estable en Reposo</p>
-          </div>
-          <span class="text-[10px] font-mono-tech px-2 py-1 rounded bg-slate-900 border border-slate-700 text-cyan-300">MPU-6050</span>
-        </div>
-
-        <div class="flex items-center justify-center py-3">
-          <div class="scene-3d">
-            <div id="cube-3d" class="cube-3d">
-              <div class="cube-face face-front">FRENTE</div>
-              <div class="cube-face face-back">ATRÁS</div>
-              <div class="cube-face face-right">DER</div>
-              <div class="cube-face face-left">IZQ</div>
-              <div class="cube-face face-top">MPU</div>
-              <div class="cube-face face-bottom">BASE</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 text-center">
-          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2">
-            <p class="text-[10px] text-slate-400">Actual Δa</p>
-            <p id="txt-acel" class="text-sm font-bold font-mono-tech text-emerald-400">0.00</p>
-          </div>
-          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2">
-            <p class="text-[10px] text-slate-400">Pico Máx</p>
-            <p id="txt-pico" class="text-sm font-bold font-mono-tech text-cyan-400">0.00</p>
-          </div>
-        </div>
+      <div class="hero-info">
+        <div class="eyebrow">Estado de la Bóveda</div>
+        <div id="estadoTexto" class="hero-state">BLOQUEADA</div>
+        <p id="ultimoEvento" class="hero-event">Sincronizando telemetría con el ESP32...</p>
       </div>
 
-      <!-- Comandos y Configuración -->
-      <div class="lg:col-span-4 space-y-4">
-        <div class="glass rounded-2xl p-4 space-y-2.5">
-          <p class="text-xs uppercase text-slate-400 font-semibold">Comandos Remotos</p>
-          <button onclick="abrirModalPin()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-sm">
-            🔓 Apertura Remota (PIN)
-          </button>
-          <div class="grid grid-cols-2 gap-2.5">
-            <button onclick="resetearAlerta()" class="py-2 rounded-xl bg-indigo-600/25 border border-indigo-500/40 text-indigo-200 font-semibold text-xs">✓ Reset Alerta</button>
-            <button onclick="activarPanico()" class="py-2 rounded-xl bg-rose-600/25 border border-rose-500/50 text-rose-200 font-semibold text-xs">🚨 Pánico</button>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <span class="kpi-label">Intentos Fallidos</span>
+          <div class="kpi-val"><span id="intentosNum">0/3</span><span class="attempt-dots" id="attemptDots"><i></i><i></i><i></i></span></div>
+        </div>
+        <div class="kpi"><span class="kpi-label">Cerradura Servo</span><div class="kpi-val" id="cerraduraVal">CERRADA</div></div>
+        <div class="kpi"><span class="kpi-label">Latencia Nube</span><div class="kpi-val" id="latenciaVal">-- ms</div></div>
+        <div class="kpi"><span class="kpi-label">Último Sync</span><div class="kpi-val" id="horaSync">--:--:--</div></div>
+      </div>
+    </section>
+
+    <div class="workspace">
+      <section class="panel card">
+        <div class="card-head"><h2>Control Remoto</h2><span>PIN DE 4 DÍGITOS</span></div>
+
+        <div class="tabs">
+          <button id="tabOpen" class="tab-btn active" type="button">Abrir Puerta</button>
+          <button id="tabPin" class="tab-btn" type="button">Cambiar PIN</button>
+        </div>
+
+        <div class="pin-display">
+          <div id="pinCaption" class="pin-caption">Ingresa tu PIN actual para enviar orden de apertura</div>
+          <div class="pin-dots" id="pinDots">
+            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
           </div>
         </div>
 
-        <div class="glass rounded-2xl p-4 space-y-3">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-300">Sensibilidad MPU</span>
-              <span id="val-umbral" class="font-mono-tech text-cyan-300 font-bold">1.2 m/s²</span>
-            </div>
-            <input id="slider-umbral" type="range" min="0.5" max="5.0" step="0.1" value="1.2"
-              oninput="document.getElementById('val-umbral').textContent = parseFloat(this.value).toFixed(1) + ' m/s²'"
-              onchange="actualizarUmbral(this.value)"
-              class="w-full accent-indigo-500">
-          </div>
-          <div class="pt-2 border-t border-slate-800 flex gap-2">
-            <input id="input-pin" type="password" maxlength="4" placeholder="Nuevo PIN (4 dig)" class="w-full px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-mono-tech text-white">
-            <button onclick="cambiarPin()" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-xs font-bold shrink-0">Guardar</button>
-          </div>
+        <div class="keypad-grid" id="keypad">
+          <button class="key-btn" data-key="1" type="button">1</button>
+          <button class="key-btn" data-key="2" type="button">2</button>
+          <button class="key-btn" data-key="3" type="button">3</button>
+          <button class="key-btn" data-key="4" type="button">4</button>
+          <button class="key-btn" data-key="5" type="button">5</button>
+          <button class="key-btn" data-key="6" type="button">6</button>
+          <button class="key-btn" data-key="7" type="button">7</button>
+          <button class="key-btn" data-key="8" type="button">8</button>
+          <button class="key-btn" data-key="9" type="button">9</button>
+          <button class="key-btn key-action" data-key="clear" type="button">Borrar</button>
+          <button class="key-btn" data-key="0" type="button">0</button>
+          <button id="btnSubmitPin" class="key-btn key-action key-submit" data-key="submit" type="button">Abrir</button>
         </div>
-      </div>
-    </div>
 
-    <!-- GRÁFICA + LOGS -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div class="lg:col-span-7 glass rounded-2xl p-4">
-        <h3 class="text-xs font-bold uppercase text-slate-300 mb-2">Monitor Sísmico en Vivo (MPU-6050)</h3>
-        <div class="h-48 w-full"><canvas id="mpuChart"></canvas></div>
-      </div>
-      <div class="lg:col-span-5 glass rounded-2xl p-4">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-xs font-bold uppercase text-slate-300">Consola de Auditoría</h3>
-          <button onclick="exportarCSV()" class="px-2 py-0.5 rounded bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 text-[11px]">⬇ CSV</button>
+        <div class="emergency-bar">
+          <button id="btnPanico" class="btn-panic" type="button"><span id="panicoLabel">Activar Modo Pánico</span></button>
+          <button id="btnSync" class="btn-icon" type="button">Sync</button>
         </div>
-        <div id="lista-logs" class="h-48 overflow-y-auto space-y-1.5 font-mono-tech text-xs"></div>
-      </div>
+      </section>
+
+      <section class="panel card">
+        <div class="card-head"><h2>Auditoría de Eventos</h2><span id="logCount">0 registros</span></div>
+        <div class="log-toolbar">
+          <div class="filter-group">
+            <button class="chip active" data-filter="all" type="button">Todos</button>
+            <button class="chip" data-filter="alert" type="button">Alertas</button>
+            <button class="chip" data-filter="access" type="button">Accesos</button>
+          </div>
+          <div class="filter-group">
+            <button id="btnExport" class="btn-icon" type="button">CSV</button>
+            <button id="btnClearLog" class="btn-icon" type="button">Limpiar</button>
+          </div>
+        </div>
+        <ul id="logList" class="log-list"></ul>
+      </section>
     </div>
   </div>
 
-  <!-- MODAL PIN -->
-  <div id="modal-pin" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
-    <div class="glass rounded-2xl p-5 w-full max-w-xs border-indigo-500/40 space-y-3 text-center">
-      <div class="flex justify-between items-center">
-        <span class="text-xs font-mono-tech uppercase text-indigo-300 font-bold">Autorización Remota</span>
-        <button onclick="cerrarModalPin()" class="text-slate-400">✕</button>
-      </div>
-      <div id="pin-display" class="py-2.5 rounded-xl bg-slate-950 border border-slate-800 font-mono-tech text-2xl tracking-[0.5em] text-cyan-400">----</div>
-      <div class="grid grid-cols-3 gap-2 font-mono-tech font-bold text-lg">
-        <button onclick="teclaPin('1')" class="py-2.5 rounded-xl bg-slate-800">1</button>
-        <button onclick="teclaPin('2')" class="py-2.5 rounded-xl bg-slate-800">2</button>
-        <button onclick="teclaPin('3')" class="py-2.5 rounded-xl bg-slate-800">3</button>
-        <button onclick="teclaPin('4')" class="py-2.5 rounded-xl bg-slate-800">4</button>
-        <button onclick="teclaPin('5')" class="py-2.5 rounded-xl bg-slate-800">5</button>
-        <button onclick="teclaPin('6')" class="py-2.5 rounded-xl bg-slate-800">6</button>
-        <button onclick="teclaPin('7')" class="py-2.5 rounded-xl bg-slate-800">7</button>
-        <button onclick="teclaPin('8')" class="py-2.5 rounded-xl bg-slate-800">8</button>
-        <button onclick="teclaPin('9')" class="py-2.5 rounded-xl bg-slate-800">9</button>
-        <button onclick="borrarPinModal()" class="py-2.5 rounded-xl bg-rose-950/60 text-rose-300 text-xs">BORRAR</button>
-        <button onclick="teclaPin('0')" class="py-2.5 rounded-xl bg-slate-800">0</button>
-        <button onclick="validarPinModal()" class="py-2.5 rounded-xl bg-emerald-600 text-white text-xs">OK</button>
-      </div>
-    </div>
-  </div>
+  <div id="toast" class="toast"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  <script>
+    const DB_URL = "https://proyecto-esp32-a862e-default-rtdb.firebaseio.com/caja.json";
+    const POLL_MS = 2500;
+    const STORAGE_KEY = "vaultguard_pro_logs_v2";
+    const $ = (id) => document.getElementById(id);
 
-    // Manifiesto PWA dinámico para instalar como app en celular
-    const manifestObj = {
-      name: "VaultGuard ESP32 - UTA",
-      short_name: "VaultGuard",
-      start_url: ".",
-      display: "standalone",
-      background_color: "#030610",
-      theme_color: "#030610"
-    };
-    document.getElementById("pwa-manifest").href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifestObj));
+    let soundEnabled = true, activeMode = "open", pinBuffer = "", claveActualCache = "7777";
+    let activeFilter = "all", lastState = null, lastEvent = null, lastAlert = false;
+    let logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let audioCtx = null;
 
-    const app = initializeApp({ databaseURL: "https://proyecto-esp32-a862e-default-rtdb.firebaseio.com" });
-    const db = getDatabase(app);
-    const cajaRef = ref(db, "caja");
-    const connectedRef = ref(db, ".info/connected");
-
-    let valorAcelActual = 0.05, umbralActual = 1.2, picoMax = 0.0, alertaGlobal = false;
-    let claveActualSistema = "7777", pinModalBuffer = "", ultimoEventoGuardado = "", historialLogs = [];
-    let vozActiva = false, sonidoActivo = false, audioCtx = null;
-
-    setInterval(() => { document.getElementById("reloj").textContent = new Date().toLocaleTimeString(); }, 1000);
-
-    // Conexión Firebase
-    onValue(connectedRef, (snap) => {
-      const b = document.getElementById("badge-conexion"), d = document.getElementById("dot-conexion"), t = document.getElementById("txt-conexion");
-      if (snap.val() === true) {
-        b.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5";
-        d.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
-        t.textContent = "EN LÍNEA";
-      } else {
-        b.className = "px-3 py-1.5 text-xs font-semibold rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center gap-1.5";
-        d.className = "w-2 h-2 rounded-full bg-rose-500";
-        t.textContent = "SIN RED";
-      }
-    });
-
-    // Notificaciones Push + Vibración
-    function actualizarBtnNotif() {
-      const el = document.getElementById("txt-notif");
-      if (!("Notification" in window)) el.textContent = "🚫 No soportado";
-      else if (Notification.permission === "granted") el.textContent = "🔔 Notificaciones: ON";
-      else if (Notification.permission === "denied") el.textContent = "🔕 Bloqueadas";
-      else el.textContent = "🔔 Activar Notificaciones";
+    function playTone(freq, duration = 0.06, type = "sine", vol = 0.08) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+      } catch (_) {}
     }
-    actualizarBtnNotif();
 
-    window.activarNotificaciones = async () => {
-      if (!("Notification" in window)) return alert("Tu navegador no soporta notificaciones.");
-      const p = await Notification.requestPermission();
-      actualizarBtnNotif();
-      if (p === "granted") {
-        new Notification("VaultGuard ESP32 - UTA", { body: "Notificaciones activadas en tu celular.", vibrate: [200, 100, 200] });
+    const nowTime = () => new Date().toLocaleTimeString("es-EC", { hour12: false });
+    const nowDate = () => new Date().toLocaleDateString("es-EC");
+
+    function showToast(msg) {
+      const t = $("toast"); t.textContent = msg; t.classList.add("show");
+      clearTimeout(showToast._t); showToast._t = setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    function saveLogs() { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs.slice(0, 60))); }
+
+    function addLog(title, detail, type = "info") {
+      logs.unshift({ title, detail, type, time: nowTime(), date: nowDate() });
+      if (logs.length > 60) logs.pop();
+      saveLogs(); renderLogs();
+    }
+
+    function renderLogs() {
+      const list = $("logList");
+      const filtered = activeFilter === "all" ? logs : logs.filter(l => l.type === activeFilter);
+      $("logCount").textContent = `${filtered.length} registros`;
+      if (!filtered.length) {
+        list.innerHTML = `<li class="empty-log">No hay eventos registrados en esta categoría.</li>`;
+        return;
       }
-    };
+      list.innerHTML = filtered.map(item => `
+        <li class="log-item type-${item.type}">
+          <div><strong>${item.title}</strong><p>${item.detail}</p></div>
+          <span class="log-time">${item.time}</span>
+        </li>
+      `).join("");
+    }
 
-    function notificarCelular(titulo, cuerpo) {
-      if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 500]);
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(titulo, { body: cuerpo, vibrate: [300, 100, 300], requireInteraction: true });
+    function updatePinDots(isError = false) {
+      const dots = $("pinDots").children;
+      for (let i = 0; i < 4; i++) {
+        dots[i].classList.toggle("filled", i < pinBuffer.length);
+        dots[i].classList.toggle("error", isError);
       }
     }
 
-    window.toggleVoz = () => {
-      vozActiva = !vozActiva;
-      document.getElementById("txt-voz").textContent = vozActiva ? "🗣️ Voz: ON" : "🗣️ Voz: OFF";
-      if (vozActiva) hablar("Asistente de voz activado.");
-    };
-    function hablar(t) {
-      if (!vozActiva || !("speechSynthesis" in window)) return;
-      speechSynthesis.cancel();
-      const m = new SpeechSynthesisUtterance(t); m.lang = "es-ES";
-      speechSynthesis.speak(m);
+    function setMode(mode) {
+      activeMode = mode; pinBuffer = ""; updatePinDots();
+      $("tabOpen").classList.toggle("active", mode === "open");
+      $("tabPin").classList.toggle("active", mode === "pin");
+      $("pinCaption").textContent = mode === "open"
+        ? "Ingresa tu PIN actual para enviar orden de apertura"
+        : "Ingresa el nuevo PIN de 4 dígitos para guardar en la bóveda";
+      const submitBtn = $("btnSubmitPin");
+      submitBtn.textContent = mode === "open" ? "Abrir" : "Guardar";
+      submitBtn.classList.toggle("mode-save", mode === "pin");
     }
 
-    window.toggleSonido = () => {
-      sonidoActivo = !sonidoActivo;
-      document.getElementById("txt-sonido").textContent = sonidoActivo ? "🔊 Sirena: ON" : "🔇 Sirena: OFF";
-      if (sonidoActivo && !audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    };
-    function sonarAlarma() {
-      if (!sonidoActivo || !audioCtx) return;
-      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.type = "sawtooth"; o.frequency.setValueAtTime(920, audioCtx.currentTime);
-      o.frequency.exponentialRampToValueAtTime(420, audioCtx.currentTime + 0.35);
-      g.gain.setValueAtTime(0.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-      o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.4);
+    async function patchFirebase(payload) {
+      const res = await fetch(DB_URL, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
     }
 
-    const maxPoints = 28;
-    const mpuChart = new Chart(document.getElementById("mpuChart").getContext("2d"), {
-      type: "line",
-      data: {
-        labels: Array(maxPoints).fill(""),
-        datasets: [
-          { data: Array(maxPoints).fill(0.05), borderColor: "#34d399", backgroundColor: "rgba(52,211,153,0.14)", borderWidth: 2, tension: 0.35, fill: true, pointRadius: 0 },
-          { data: Array(maxPoints).fill(1.2), borderColor: "rgba(244,63,94,0.6)", borderDash: [6, 6], borderWidth: 1.5, pointRadius: 0, fill: false }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: { duration: 180 },
-        scales: { y: { min: 0, max: 6, grid: { color: "rgba(148,163,184,0.08)" }, ticks: { color: "#94a3b8" } }, x: { display: false } },
-        plugins: { legend: { display: false } }
+    async function handlePinSubmit() {
+      if (pinBuffer.length !== 4) {
+        playTone(220, 0.14, "sawtooth", 0.08); updatePinDots(true);
+        showToast("Ingresa los 4 dígitos del PIN.");
+        setTimeout(() => updatePinDots(false), 400);
+        return;
       }
-    });
-
-    setInterval(() => {
-      const val = alertaGlobal ? Math.max(valorAcelActual, umbralActual + 0.7 + Math.random() * 1.1) : (valorAcelActual + Math.random() * 0.06);
-      if (val > picoMax) { picoMax = val; document.getElementById("txt-pico").textContent = picoMax.toFixed(2); }
-      document.getElementById("txt-acel").textContent = val.toFixed(2);
-
-      mpuChart.data.datasets[0].data.push(val); mpuChart.data.datasets[0].data.shift();
-      mpuChart.data.datasets[1].data = Array(maxPoints).fill(umbralActual);
-      mpuChart.data.datasets[0].borderColor = alertaGlobal ? "#fb7185" : "#34d399";
-      mpuChart.update();
-
-      const cube = document.getElementById("cube-3d");
-      const tilt = Math.min(val * 14, 45);
-      cube.style.transform = `rotateX(${-20 + tilt}deg) rotateY(${28 + (alertaGlobal ? (Math.random() - 0.5) * 42 : tilt)}deg)`;
-      cube.classList.toggle("cube-alert", alertaGlobal);
-    }, 650);
-
-    function agregarLog(msg, tipo) {
-      historialLogs.unshift({ hora: new Date().toLocaleTimeString(), msg, tipo });
-      document.getElementById("lista-logs").innerHTML = historialLogs.map(l => {
-        const c = l.tipo === "alerta" ? "text-rose-300 border-rose-500/40 bg-rose-950/35" : "text-emerald-300 border-emerald-500/30 bg-emerald-950/30";
-        return `<div class="px-2.5 py-1.5 rounded-lg border ${c} flex justify-between"><span>${l.msg}</span><span class="opacity-70">${l.hora}</span></div>`;
-      }).join("");
-    }
-
-    window.exportarCSV = () => {
-      if (!historialLogs.length) return;
-      const csv = "Hora,Tipo,Evento\n" + historialLogs.map(l => `"${l.hora}","${l.tipo}","${l.msg}"`).join("\n");
-      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "VaultGuard_UTA.csv"; a.click();
-    };
-
-    onValue(cajaRef, (snap) => {
-      const d = snap.val();
-      if (!d) { document.getElementById("txt-estado").textContent = "SIN DATOS"; return; }
-
-      if (typeof d.deltaA === "number") valorAcelActual = d.deltaA;
-      if (typeof d.umbral === "number") { umbralActual = d.umbral; document.getElementById("slider-umbral").value = umbralActual; document.getElementById("val-umbral").textContent = umbralActual.toFixed(1) + " m/s²"; }
-      if (d.claveActual && d.claveActual.length === 4) claveActualSistema = d.claveActual;
-
-      alertaGlobal = Boolean(d.alertaActiva);
-      document.getElementById("txt-estado").textContent = d.estado || "BLOQUEADA";
-      document.getElementById("txt-evento").textContent = d.ultimoEvento || "Sin eventos";
-      document.getElementById("txt-intentos").textContent = `Fallos: ${d.intentosFallidos ?? 0} / 3`;
-
-      const vc = document.getElementById("vault-container"), vr = document.getElementById("vault-ring"), vco = document.getElementById("vault-core");
-      const es = document.getElementById("txt-estado"), sn = document.getElementById("txt-sensor");
-
-      if (alertaGlobal) {
-        vc.classList.remove("vault-open"); vc.classList.add("shake-active");
-        vr.setAttribute("stroke", "#f43f5e"); vco.setAttribute("fill", "#f43f5e");
-        es.className = "text-2xl font-black text-rose-500 font-cyber animate-pulse";
-        sn.textContent = "¡INTRUSIÓN DETECTADA!"; sn.className = "text-sm font-extrabold text-rose-400";
-        sonarAlarma();
-      } else if (d.estado === "ABIERTA") {
-        vc.classList.add("vault-open"); vc.classList.remove("shake-active");
-        vr.setAttribute("stroke", "#f59e0b"); vco.setAttribute("fill", "#f59e0b");
-        es.className = "text-2xl font-black text-amber-400 font-cyber";
-        sn.textContent = "Desarmado"; sn.className = "text-sm font-extrabold text-amber-400";
-      } else {
-        vc.classList.remove("vault-open", "shake-active");
-        vr.setAttribute("stroke", "#10b981"); vco.setAttribute("fill", "#10b981");
-        es.className = "text-2xl font-black text-emerald-400 font-cyber";
-        sn.textContent = "Estable en Reposo"; sn.className = "text-sm font-extrabold text-emerald-400";
-      }
-
-      if (d.ultimoEvento && d.ultimoEvento !== ultimoEventoGuardado) {
-        ultimoEventoGuardado = d.ultimoEvento;
-        agregarLog(`[${d.estado}] ${d.ultimoEvento}`, alertaGlobal ? "alerta" : "ok");
-        if (alertaGlobal) {
-          hablar("Atención. " + d.ultimoEvento);
-          notificarCelular("🚨 ALERTA CAJA FUERTE (UTA)", d.ultimoEvento);
+      if (activeMode === "open") {
+        if (pinBuffer !== claveActualCache) {
+          playTone(180, 0.22, "sawtooth", 0.1); updatePinDots(true);
+          addLog("PIN REMOTO INCORRECTO", "Intento de apertura rechazado desde la web", "alert");
+          showToast("PIN incorrecto.");
+          setTimeout(() => { pinBuffer = ""; updatePinDots(false); }, 450);
+          return;
         }
+        try {
+          await patchFirebase({ ordenAbrir: true, ultimoEvento: "Orden de apertura remota enviada" });
+          playTone(660, 0.08); setTimeout(() => playTone(880, 0.12), 90);
+          pinBuffer = ""; updatePinDots(); showToast("Orden de apertura enviada al ESP32.");
+        } catch (_) { showToast("Error de conexión con Firebase."); }
+      } else {
+        try {
+          await patchFirebase({ claveActual: pinBuffer, ultimoEvento: "PIN actualizado desde consola web" });
+          claveActualCache = pinBuffer;
+          playTone(587, 0.08); setTimeout(() => playTone(784, 0.12), 90);
+          addLog("PIN ACTUALIZADO", "Nueva clave sincronizada con Firebase", "access");
+          pinBuffer = ""; updatePinDots(); setMode("open"); showToast("Nuevo PIN guardado correctamente.");
+        } catch (_) { showToast("No se pudo guardar el nuevo PIN."); }
       }
+    }
+
+    function sendPush(title, body) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        try { new Notification(title, { body, tag: "vaultguard-pro", renotify: true }); } catch (_) {}
+      }
+    }
+
+    function renderVault(data, latencyMs) {
+      if (!data || typeof data !== "object") return;
+      $("connPill").classList.add("online"); $("connText").textContent = "Online";
+      $("latenciaVal").textContent = `${latencyMs} ms`; $("horaSync").textContent = nowTime();
+
+      const estado = String(data.estado || "BLOQUEADA");
+      const evento = String(data.ultimoEvento || "Sin actividad reciente");
+      const intentos = Math.min(3, Math.max(0, Number(data.intentosFallidos ?? 0)));
+      const alerta = Boolean(data.alertaActiva);
+      if (typeof data.claveActual === "string" && /^\d{4}$/.test(data.claveActual)) claveActualCache = data.claveActual;
+
+      $("estadoTexto").textContent = estado; $("ultimoEvento").textContent = evento;
+      $("intentosNum").textContent = `${intentos}/3`;
+      $("cerraduraVal").textContent = estado === "ABIERTA" ? "ABIERTA" : "CERRADA";
+
+      const dotEls = $("attemptDots").children;
+      for (let i = 0; i < 3; i++) dotEls[i].classList.toggle("filled", i < intentos);
+
+      const hero = $("heroCard");
+      hero.classList.remove("state-open", "state-alert", "state-panic");
+      if (estado === "ABIERTA") {
+        hero.classList.add("state-open");
+        $("lockShackle").setAttribute("d", "M7 11V7a5 5 0 0 1 9.9-1");
+      } else {
+        $("lockShackle").setAttribute("d", "M7 11V7a5 5 0 0 1 10 0v4");
+        if (estado === "BLOQUEO_PANICO") hero.classList.add("state-panic");
+        else if (alerta || estado === "ALERTA_BLOQUEO") hero.classList.add("state-alert");
+      }
+
+      const inPanic = estado === "BLOQUEO_PANICO";
+      $("btnPanico").classList.toggle("active", inPanic);
+      $("panicoLabel").textContent = inPanic ? "Desactivar Modo Pánico" : "Activar Modo Pánico";
+
+      if (estado !== lastState || evento !== lastEvent) {
+        const logType = (alerta || estado === "BLOQUEO_PANICO" || estado === "ALERTA_BLOQUEO")
+          ? "alert" : (estado === "ABIERTA" ? "access" : "info");
+        addLog(estado, evento, logType);
+        if ((alerta && !lastAlert) || estado === "BLOQUEO_PANICO" || estado === "ALERTA_BLOQUEO") {
+          playTone(440, 0.15, "square", 0.08); sendPush(`VaultGuard: ${estado}`, evento);
+        }
+        lastState = estado; lastEvent = evento; lastAlert = alerta;
+      }
+    }
+
+    async function syncFirebase() {
+      const t0 = performance.now();
+      try {
+        const res = await fetch(DB_URL + "?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        renderVault(data, Math.round(performance.now() - t0));
+      } catch (_) {
+        $("connPill").classList.remove("online"); $("connText").textContent = "Sin red"; $("latenciaVal").textContent = "-- ms";
+      }
+    }
+
+    $("keypad").addEventListener("click", (e) => {
+      const btn = e.target.closest("button"); if (!btn) return;
+      const key = btn.dataset.key;
+      if (key === "clear") { pinBuffer = pinBuffer.slice(0, -1); playTone(300, 0.04); updatePinDots(); }
+      else if (key === "submit") handlePinSubmit();
+      else if (/^\d$/.test(key) && pinBuffer.length < 4) { pinBuffer += key; playTone(520 + Number(key) * 25, 0.045); updatePinDots(); }
     });
 
-    window.resetearAlerta = () => update(cajaRef, { alertaActiva: false, estado: "BLOQUEADA", intentosFallidos: 0, ultimoEvento: "Alerta revisada desde web" });
-    window.activarPanico = () => update(cajaRef, { alertaActiva: true, estado: "BLOQUEO_PANICO", ultimoEvento: "Bloqueo de pánico activado desde web" });
-    window.actualizarUmbral = (v) => update(cajaRef, { umbral: parseFloat(v) });
-    window.cambiarPin = () => {
-      const p = document.getElementById("input-pin").value.trim();
-      if (/^\d{4}$/.test(p)) { update(cajaRef, { claveActual: p, ultimoEvento: "PIN actualizado desde web" }); document.getElementById("input-pin").value = ""; }
-    };
+    document.addEventListener("keydown", (e) => {
+      if (/^\d$/.test(e.key) && pinBuffer.length < 4) { pinBuffer += e.key; playTone(520, 0.04); updatePinDots(); }
+      else if (e.key === "Backspace") { pinBuffer = pinBuffer.slice(0, -1); updatePinDots(); }
+      else if (e.key === "Enter") handlePinSubmit();
+    });
 
-    window.abrirModalPin = () => { pinModalBuffer = ""; document.getElementById("pin-display").textContent = "----"; document.getElementById("modal-pin").classList.replace("hidden", "flex"); };
-    window.cerrarModalPin = () => document.getElementById("modal-pin").classList.replace("flex", "hidden");
-    window.teclaPin = (n) => { if (pinModalBuffer.length < 4) { pinModalBuffer += n; document.getElementById("pin-display").textContent = "*".repeat(pinModalBuffer.length).padEnd(4, "-"); } };
-    window.borrarPinModal = () => { pinModalBuffer = ""; document.getElementById("pin-display").textContent = "----"; };
-    window.validarPinModal = () => {
-      if (pinModalBuffer === claveActualSistema) {
-        cerrarModalPin();
-        update(cajaRef, { ordenAbrir: true, estado: "ABIERTA", alertaActiva: false, ultimoEvento: "Apertura remota autorizada por PIN" });
-      } else { borrarPinModal(); hablar("Código incorrecto."); }
-    };
+    $("tabOpen").addEventListener("click", () => setMode("open"));
+    $("tabPin").addEventListener("click", () => setMode("pin"));
+
+    $("btnPanico").addEventListener("click", async () => {
+      const activate = !$("btnPanico").classList.contains("active");
+      try {
+        await patchFirebase({
+          estado: activate ? "BLOQUEO_PANICO" : "BLOQUEADA",
+          alertaActiva: activate,
+          ultimoEvento: activate ? "Modo pánico activado desde consola web" : "Modo pánico desactivado desde consola web"
+        });
+        playTone(activate ? 260 : 620, 0.14);
+        showToast(activate ? "Modo pánico activado." : "Bóveda restaurada a modo normal.");
+        syncFirebase();
+      } catch (_) { showToast("Error al cambiar el modo pánico."); }
+    });
+
+    $("btnSync").addEventListener("click", () => { syncFirebase(); showToast("Sincronizando estado..."); });
+
+    $("btnSound").addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      $("btnSound").classList.toggle("active-toggle", soundEnabled);
+      $("soundLabel").textContent = soundEnabled ? "Sonido ON" : "Sonido OFF";
+      if (soundEnabled) playTone(600, 0.06);
+    });
+
+    $("btnNotif").addEventListener("click", async () => {
+      if (!("Notification" in window)) return showToast("Navegador sin soporte de notificaciones.");
+      const perm = await Notification.requestPermission();
+      $("notifLabel").textContent = perm === "granted" ? "Notif. ON" : "Notif. OFF";
+      $("btnNotif").classList.toggle("active-toggle", perm === "granted");
+      showToast(perm === "granted" ? "Notificaciones activadas." : "Permiso no concedido.");
+    });
+
+    document.querySelectorAll(".chip[data-filter]").forEach(chip => {
+      chip.addEventListener("click", () => {
+        document.querySelectorAll(".chip[data-filter]").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active"); activeFilter = chip.dataset.filter; renderLogs();
+      });
+    });
+
+    $("btnClearLog").addEventListener("click", () => { logs = []; saveLogs(); renderLogs(); showToast("Historial limpiado."); });
+
+    $("btnExport").addEventListener("click", () => {
+      if (!logs.length) return showToast("No hay eventos para exportar.");
+      const rows = [["Fecha", "Hora", "Estado", "Detalle", "Tipo"], ...logs.map(l => [l.date, l.time, l.title, l.detail, l.type])];
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+      a.download = `vaultguard-auditoria-${Date.now()}.csv`; a.click();
+      showToast("Reporte CSV descargado.");
+    });
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      $("notifLabel").textContent = "Notif. ON"; $("btnNotif").classList.add("active-toggle");
+    }
+    renderLogs(); syncFirebase(); setInterval(syncFirebase, POLL_MS);
   </script>
 </body>
 </html>

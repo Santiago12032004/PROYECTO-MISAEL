@@ -1,560 +1,1140 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#05080f" />
-  <title>VaultGuard Pro — Consola de Seguridad ESP32</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-0: #05080f;
-      --surface: rgba(15, 23, 42, 0.72);
-      --surface-hover: rgba(30, 41, 59, 0.75);
-      --border: rgba(148, 163, 184, 0.14);
-      --border-hi: rgba(56, 189, 248, 0.4);
-      --text: #f8fafc;
-      --text-dim: #94a3b8;
-      --text-mute: #64748b;
-      --emerald: #10b981;
-      --emerald-glow: rgba(16, 185, 129, 0.25);
-      --cyan: #38bdf8;
-      --cyan-glow: rgba(56, 189, 248, 0.25);
-      --amber: #f59e0b;
-      --rose: #f43f5e;
-      --rose-glow: rgba(244, 63, 94, 0.3);
-      --radius-lg: 22px;
-      --radius-md: 14px;
-      --radius-sm: 10px;
-      --shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.65);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#04070d">
+<title>VaultGuard Pro — Centro de Control ESP32</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04070d; --panel:rgba(12,19,33,.78); --inset:rgba(3,6,12,.72);
+  --line:rgba(148,163,184,.14); --line-hi:rgba(56,189,248,.45);
+  --text:#eef4ff; --dim:#98a8c0; --mute:#66758d;
+  --ok:#2ee6a6; --info:#38bdf8; --warn:#fbbf24; --bad:#ff4d6d;
+  --state:var(--ok);
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+body[data-state="open"]{--state:var(--info)}
+body[data-state="alert"],body[data-state="panic"]{--state:var(--bad)}
+body[data-state="unknown"]{--state:var(--mute)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{
+  min-height:100vh;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text);line-height:1.45;padding:16px;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 45% at 50% 18%,color-mix(in srgb,var(--state) 13%,transparent),transparent),
+    linear-gradient(rgba(148,163,184,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(148,163,184,.035) 1px,transparent 1px);
+  background-size:100% 100%,32px 32px,32px 32px;
+}
+.shell{max-width:1440px;margin:auto;display:grid;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 22px 50px -22px #000;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);position:relative;min-width:0}
+.panel::before{content:"";position:absolute;top:-1px;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--state) 65%,transparent),transparent)}
+.card{padding:18px;display:flex;flex-direction:column;gap:14px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700}
+.tag{font:500 .68rem var(--mono);color:var(--mute)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:rgba(30,41,59,.55);border-radius:10px;font-weight:600;transition:background .2s,border-color .2s,transform .1s,opacity .2s}
+button:hover:not(:disabled){border-color:var(--line-hi);background:rgba(51,65,85,.65)}
+button:active:not(:disabled){transform:scale(.97)}
+button:disabled{opacity:.38;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+.btn{padding:7px 12px;font-size:.76rem}
+.btn.on{background:rgba(56,189,248,.17);border-color:var(--line-hi);color:#cdefff}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+/* Barra superior */
+.top{padding:13px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line-hi);background:linear-gradient(135deg,rgba(56,189,248,.22),rgba(46,230,166,.14));color:var(--info)}
+h1{font-size:1.12rem;font-weight:800;letter-spacing:-.02em}
+h1 small{font:700 .64rem var(--mono);color:var(--info);border:1px solid var(--line-hi);border-radius:5px;padding:2px 6px;margin-left:6px;vertical-align:middle}
+.sub{font:500 .68rem var(--mono);color:var(--dim)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;gap:3px;padding:3px;border-radius:12px;background:var(--inset);border:1px solid var(--line)}
+.seg button{border-color:transparent;background:transparent;color:var(--dim)}
+.seg button.on{background:rgba(56,189,248,.18);color:#e0f5ff;border-color:var(--line-hi)}
+.pill{display:flex;gap:8px;align-items:center;padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--inset);font:500 .72rem var(--mono)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--c,var(--warn));box-shadow:0 0 10px var(--c,var(--warn))}
+.banner{padding:10px 16px;border-radius:12px;font-size:.82rem;font-weight:600;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.09);color:#fde7a8;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 
-    body {
-      min-height: 100vh;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg-0);
-      background-image:
-        radial-gradient(circle at 12% 8%, rgba(56, 189, 248, 0.13), transparent 36%),
-        radial-gradient(circle at 88% 90%, rgba(16, 185, 129, 0.09), transparent 40%),
-        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
-      color: var(--text);
-      padding: 18px;
-      line-height: 1.5;
-    }
+.grid{display:grid;gap:14px;grid-template-columns:minmax(280px,.9fr) minmax(360px,1.35fr) minmax(280px,.95fr);grid-template-areas:"ctl vault tel"}
+.a-ctl{grid-area:ctl}.a-vault{grid-area:vault}.a-tel{grid-area:tel}
 
-    .shell { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+/* Bóveda */
+.a-vault{align-items:center;text-align:center}
+.a-vault .head{width:100%}
+.door{width:min(100%,390px);aspect-ratio:1;filter:drop-shadow(0 0 28px color-mix(in srgb,var(--state) 28%,transparent))}
+.door *{transition:stroke .4s,fill .4s}
+.spin{transform-origin:200px 200px;animation:spin 40s linear infinite}
+.spin.rev{animation-direction:reverse;animation-duration:26s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wheel{transform-origin:200px 200px;transition:transform 1.1s cubic-bezier(.65,0,.25,1)}
+.bolt{transition:transform .65s cubic-bezier(.65,0,.25,1) .35s}
+body[data-state="open"] .wheel{transform:rotate(150deg)}
+body[data-state="open"] .bolt{transform:translateY(24px)}
+body[data-state="alert"] .door,body[data-state="panic"] .door{animation:danger 1.3s ease-in-out infinite}
+@keyframes danger{50%{filter:drop-shadow(0 0 54px rgba(255,77,109,.65))}}
+.state{font:700 clamp(1.5rem,3vw,2.15rem) var(--mono);color:var(--state);letter-spacing:.02em;overflow-wrap:anywhere}
+.event{color:var(--dim);font-size:.9rem;min-height:1.4em;overflow-wrap:anywhere}
+.kpis{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kpi{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
+.kpi span{display:block;font-size:.66rem;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.kpi b{font:700 1rem var(--mono)}
+.tries{display:inline-flex;gap:4px;margin-left:8px}
+.tries i{width:8px;height:8px;border-radius:50%;background:#263248}
+.tries i.on{background:var(--bad);box-shadow:0 0 8px var(--bad)}
 
-    .panel {
-      background: var(--surface);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-    }
+/* Enlace y pipeline */
+.link{width:100%;display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:8px;font:500 .68rem var(--mono)}
+.node{padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--inset)}
+.wire{height:2px;background:repeating-linear-gradient(90deg,#27344b 0 6px,transparent 6px 11px);position:relative;overflow:hidden}
+.wire i{position:absolute;top:0;left:0;width:30px;height:2px;background:var(--info);box-shadow:0 0 12px var(--info);opacity:0}
+.wire i.tx{animation:tx .75s ease-in}.wire i.rx{animation:rx .75s ease-in}
+@keyframes tx{from{opacity:1;left:-30px}to{opacity:1;left:100%}}
+@keyframes rx{from{opacity:1;left:100%}to{opacity:1;left:-30px}}
+.pipe{width:100%;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:.7rem;color:var(--mute)}
+.pipe li{border-top:3px solid #222e44;padding-top:6px}
+.pipe li.run{border-color:var(--warn);color:#fde7a8;animation:blink 1s infinite}
+.pipe li.done{border-color:var(--ok);color:#baf7df}
+.pipe li.fail{border-color:var(--bad);color:#ffc2cd}
+@keyframes blink{50%{opacity:.5}}
 
-    .topbar { padding: 16px 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .logo-badge {
-      width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(16, 185, 129, 0.16));
-      border: 1px solid var(--border-hi); color: var(--cyan);
-    }
-    .brand-title { display: flex; align-items: center; gap: 8px; }
-    .brand-title h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
-    .version-tag {
-      font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; padding: 2px 7px; border-radius: 6px;
-      background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--cyan); font-weight: 700;
-    }
-    .brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: var(--text-dim); }
-    .top-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Control */
+.tabs{display:grid;grid-template-columns:1fr 1fr}
+.pinbox{background:var(--inset);border:1px solid var(--line);border-radius:13px;padding:15px;text-align:center}
+.pinbox p{font-size:.78rem;color:var(--dim);min-height:2.9em;display:grid;place-items:center}
+.dots{display:flex;justify-content:center;gap:16px;margin-top:6px}
+.dots i{width:15px;height:15px;border-radius:50%;border:2px solid #3a4963;transition:.15s}
+.dots i.on{background:var(--info);border-color:var(--info);box-shadow:0 0 14px var(--info)}
+.dots.err{animation:shake .35s}.dots.err i{border-color:var(--bad);background:var(--bad)}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pad button{height:54px;font:700 1.22rem var(--mono)}
+.pad button.act{font:700 .82rem 'Plus Jakarta Sans',sans-serif}
+.pad button.go{background:linear-gradient(135deg,#0369a1,#0ea5e9);border-color:transparent;color:#fff}
+.panic{position:relative;overflow:hidden;padding:14px;color:#ffc2cd;border-color:rgba(255,77,109,.45);background:rgba(255,77,109,.1);user-select:none;-webkit-user-select:none;touch-action:none}
+.panic::after{content:"";position:absolute;inset:0;background:rgba(255,77,109,.55);transform-origin:left;transform:scaleX(0)}
+.panic.holding::after{transform:scaleX(1);transition:transform 1.2s linear}
+.panic span{position:relative;z-index:1}
+.panic.active{background:linear-gradient(135deg,#be123c,#f43f5e);color:#fff}
+.sim{border:1px dashed rgba(251,191,36,.45);border-radius:12px;padding:11px;display:grid;gap:8px}
+.sim div{display:flex;gap:6px;flex-wrap:wrap}
 
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 999px;
-      background: rgba(5, 8, 15, 0.75); border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--text-dim);
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); }
-    .status-pill.online { border-color: rgba(16, 185, 129, 0.35); color: #a7f3d0; }
-    .status-pill.online .status-dot { background: var(--emerald); box-shadow: 0 0 12px var(--emerald); }
+/* Telemetría */
+canvas{width:100%;height:155px;background:var(--inset);border:1px solid var(--line);border-radius:12px;display:block}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+pre{background:var(--inset);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 .72rem/1.65 var(--mono);color:#a9c7e8;overflow:auto;min-height:150px;max-height:230px}
 
-    button {
-      font-family: inherit; cursor: pointer; border: none; border-radius: var(--radius-sm); font-weight: 600;
-      transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    button:active { transform: scale(0.97); }
+/* Auditoría */
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=search]{background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:.78rem;min-width:180px;flex:1}
+.table{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--inset)}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{position:sticky;top:0;background:#0a111f;font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+td.m{font-family:var(--mono);white-space:nowrap}
+.badge{font:700 .64rem var(--mono);padding:2px 7px;border-radius:5px;border:1px solid currentColor;color:var(--info)}
+.badge.alert{color:var(--bad)}.badge.access{color:var(--ok)}
+.empty{text-align:center;color:var(--mute);padding:30px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);width:max-content;max-width:92vw;background:#0f192c;border:1px solid var(--line-hi);border-radius:14px;padding:12px 18px;font-size:.84rem;font-weight:600;opacity:0;pointer-events:none;transition:.22s;z-index:50}
+.toast.show{opacity:1;transform:translate(-50%,0)}
 
-    .btn-icon {
-      display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; font-size: 0.8rem;
-      background: rgba(30, 41, 59, 0.65); color: var(--text); border: 1px solid var(--border);
-    }
-    .btn-icon:hover { background: var(--surface-hover); border-color: var(--border-hi); }
-    .btn-icon.active-toggle { background: rgba(56, 189, 248, 0.14); border-color: rgba(56, 189, 248, 0.45); color: #bae6fd; }
+@media(max-width:1120px){.grid{grid-template-columns:1fr 1fr;grid-template-areas:"vault vault" "ctl tel"}}
+@media(max-width:720px){
+  body{padding:10px}.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"vault" "ctl" "tel"}
+  .card{padding:14px}.kpis{grid-template-columns:1fr 1fr}.kpis .kpi:first-child{grid-column:1/-1}
+  th:nth-child(4),td:nth-child(4){display:none}th,td{padding:8px}td.m{white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}.wheel,.bolt{transition:none}}
 
-    .hero { padding: 24px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; position: relative; overflow: hidden; }
-    .hero::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--emerald); transition: background 0.3s ease; }
-    .hero.state-open::after { background: var(--cyan); }
-    .hero.state-alert::after, .hero.state-panic::after { background: var(--rose); }
+/* ───── v4 ───── */
+body[data-theme="violet"]{--info:#a78bfa;--line-hi:rgba(167,139,250,.5)}
+body[data-theme="gold"]{--info:#f5c451;--line-hi:rgba(245,196,81,.5)}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+body{isolation:isolate}
+.panel{background:linear-gradient(160deg,rgba(22,33,54,.8),rgba(8,13,24,.82));transition:border-color .3s}
+.panel:hover{border-color:rgba(148,163,184,.28)}
+h1{background:linear-gradient(90deg,#fff 30%,var(--info) 50%,#fff 70%) 0/250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 7s linear infinite}
+h1 small{color:var(--info);-webkit-text-fill-color:var(--info)}
+@keyframes shine{to{background-position:-250% 0}}
+.stage{width:min(100%,390px);perspective:900px}
+.stage .door{width:100%;display:block;transition:transform .25s ease-out}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;box-shadow:inset 0 0 120px 20px rgba(255,45,85,.55)}
+body[data-state="alert"] #vignette,body[data-state="panic"] #vignette,body[data-gas="danger"] .toast{bottom:130px}
+body[data-gas="danger"] .shell{padding-bottom:140px}
+body[data-gas="danger"] #vignette{animation:flash 1.2s ease-in-out infinite}
+@keyframes flash{50%{opacity:1}}
+input[type=range]{width:100%;accent-color:var(--info)}
+label{font-size:.78rem;color:var(--dim);display:grid;gap:6px}
+.nav.panel{background:#0b1322}
+.gauge{display:grid;place-items:center;position:relative}
+.gauge svg{width:min(100%,200px)}
+.gauge b{position:absolute;font:700 1.7rem var(--mono);text-align:center}
+.gauge b span{display:block;font:500 .65rem 'Plus Jakarta Sans';color:var(--mute);text-transform:uppercase;letter-spacing:.1em}
+#arc{transition:stroke-dashoffset .6s,stroke .4s}
+.analytics{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.bars{height:110px;display:grid;grid-template-columns:repeat(24,1fr);gap:3px;align-items:end}
+.bars div{display:flex;flex-direction:column-reverse;height:100%;background:rgba(148,163,184,.05);border-radius:3px;overflow:hidden}
+.bars i{display:block;background:var(--info)}.bars i.alert{background:var(--bad)}.bars i.access{background:var(--ok)}
+.axis{display:flex;justify-content:space-between;font:500 .65rem var(--mono);color:var(--mute)}
+.mix{display:flex;gap:16px;align-items:center;justify-content:center}
+.donut{width:112px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;flex:none}
+.donut b{width:78px;aspect-ratio:1;border-radius:50%;background:#0b1322;display:grid;place-items:center;font:700 1.3rem var(--mono)}
+.legend{font-size:.78rem;display:grid;gap:4px;color:var(--dim)}.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:7px}
+dialog{margin:12vh auto auto;width:min(92vw,520px);background:#0b1322;color:var(--text);border:1px solid var(--line-hi);border-radius:16px;padding:12px;box-shadow:0 30px 90px #000}
+dialog::backdrop{background:rgba(1,3,8,.7);backdrop-filter:blur(5px)}
+dialog input{width:100%}
+#cmdList{display:grid;gap:5px;margin-top:9px;max-height:50vh;overflow:auto}
+#cmdList button{text-align:left;padding:10px 13px;font-size:.84rem}
+#boot{position:fixed;inset:0;z-index:90;background:#04070d;display:grid;place-content:center;gap:14px;text-align:center;font:500 .76rem var(--mono);color:var(--dim);transition:opacity .5s,visibility .5s;cursor:pointer}
+#boot strong{font-size:1.5rem;color:#fff;letter-spacing:.3em}
+#boot .load{width:260px;height:3px;background:#17223a;margin:auto}#boot .load i{display:block;height:100%;background:var(--info);box-shadow:0 0 14px var(--info);animation:load 1.5s ease-in-out forwards}
+@keyframes load{from{width:0}to{width:100%}}
+#boot.off{opacity:0;visibility:hidden}
+@media(max-width:720px){.analytics{grid-template-columns:minmax(0,1fr)}.bars{gap:2px}}
+@media(prefers-reduced-motion:reduce){#boot{display:none}}
 
-    .vault-ring {
-      width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center;
-      background: rgba(16, 185, 129, 0.08); border: 2px solid rgba(16, 185, 129, 0.45);
-      box-shadow: 0 0 32px var(--emerald-glow); color: var(--emerald); transition: all 0.3s ease;
-    }
-    .hero.state-open .vault-ring { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.55); box-shadow: 0 0 36px var(--cyan-glow); color: var(--cyan); }
-    .hero.state-alert .vault-ring, .hero.state-panic .vault-ring {
-      background: rgba(244, 63, 94, 0.12); border-color: rgba(244, 63, 94, 0.65);
-      box-shadow: 0 0 40px var(--rose-glow); color: var(--rose); animation: pulse-danger 1.4s infinite;
-    }
-
-    @keyframes pulse-danger {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 24px var(--rose-glow); }
-      50% { transform: scale(1.04); box-shadow: 0 0 44px rgba(244, 63, 94, 0.55); }
-    }
-
-    .hero-info .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-mute); margin-bottom: 4px; }
-    .hero-state { font-family: 'JetBrains Mono', monospace; font-size: clamp(1.55rem, 3.2vw, 2.3rem); font-weight: 700; letter-spacing: -0.02em; color: #6ee7b7; line-height: 1.15; }
-    .hero.state-open .hero-state { color: #7dd3fc; }
-    .hero.state-alert .hero-state, .hero.state-panic .hero-state { color: #fda4af; }
-    .hero-event { margin-top: 6px; font-size: 0.94rem; color: var(--text-dim); }
-
-    .kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(135px, 1fr)); gap: 10px; }
-    .kpi { background: rgba(5, 8, 15, 0.55); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; }
-    .kpi-label { font-size: 0.72rem; color: var(--text-mute); margin-bottom: 4px; display: block; }
-    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
-    .attempt-dots { display: inline-flex; gap: 5px; }
-    .attempt-dots i { width: 9px; height: 9px; border-radius: 50%; background: rgba(148, 163, 184, 0.2); display: inline-block; }
-    .attempt-dots i.filled { background: var(--rose); box-shadow: 0 0 8px var(--rose); }
-
-    .workspace { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 18px; }
-    .card { padding: 22px; display: flex; flex-direction: column; gap: 18px; }
-    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .card-head h2 { font-size: 1rem; font-weight: 700; }
-    .card-head span { font-family: 'JetBrains Mono', monospace; font-size: 0.73rem; color: var(--text-mute); }
-
-    .tabs { display: grid; grid-template-columns: 1fr 1fr; background: rgba(5, 8, 15, 0.65); padding: 4px; border-radius: 12px; border: 1px solid var(--border); }
-    .tab-btn { padding: 10px; font-size: 0.84rem; background: transparent; color: var(--text-dim); border-radius: 9px; }
-    .tab-btn.active { background: rgba(56, 189, 248, 0.16); color: #e0f2fe; border: 1px solid rgba(56, 189, 248, 0.35); }
-
-    .pin-display { background: rgba(5, 8, 15, 0.75); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .pin-caption { font-size: 0.78rem; color: var(--text-dim); text-align: center; }
-    .pin-dots { display: flex; gap: 16px; }
-    .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(148, 163, 184, 0.35); transition: all 0.16s ease; }
-    .pin-dot.filled { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 14px var(--cyan-glow); transform: scale(1.1); }
-    .pin-dot.error { background: var(--rose); border-color: var(--rose); box-shadow: 0 0 14px var(--rose-glow); }
-
-    .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .key-btn {
-      height: 56px; font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700;
-      background: rgba(30, 41, 59, 0.55); color: var(--text); border: 1px solid var(--border); border-radius: 13px;
-    }
-    .key-btn:hover { background: rgba(51, 65, 85, 0.7); border-color: rgba(148, 163, 184, 0.35); }
-    .key-btn.key-action { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.85rem; font-weight: 700; }
-    .key-btn.key-submit { background: linear-gradient(135deg, #0284c7, #0ea5e9); border-color: transparent; color: #fff; box-shadow: 0 10px 24px rgba(14, 165, 233, 0.28); }
-    .key-btn.key-submit.mode-save { background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 10px 24px rgba(16, 185, 129, 0.25); }
-
-    .emergency-bar { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding-top: 6px; border-top: 1px solid var(--border); }
-    .btn-panic {
-      padding: 14px 16px; background: rgba(244, 63, 94, 0.12); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4);
-      border-radius: 13px; font-size: 0.88rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-panic:hover { background: rgba(244, 63, 94, 0.22); }
-    .btn-panic.active { background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; border-color: transparent; box-shadow: 0 10px 28px rgba(244, 63, 94, 0.38); }
-
-    .log-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-    .filter-group { display: flex; gap: 6px; }
-    .chip { padding: 6px 11px; font-size: 0.75rem; border-radius: 999px; background: rgba(5, 8, 15, 0.6); color: var(--text-dim); border: 1px solid var(--border); }
-    .chip.active { background: rgba(56, 189, 248, 0.16); color: #bae6fd; border-color: rgba(56, 189, 248, 0.4); }
-
-    .log-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 390px; overflow-y: auto; padding-right: 4px; }
-    .log-item {
-      background: rgba(5, 8, 15, 0.55); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
-      border-radius: 12px; padding: 11px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
-    }
-    .log-item.type-alert { border-left-color: var(--rose); }
-    .log-item.type-access { border-left-color: var(--emerald); }
-    .log-item strong { display: block; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace; color: var(--text); }
-    .log-item p { font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
-    .log-time { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-mute); white-space: nowrap; }
-    .empty-log { text-align: center; padding: 36px 16px; color: var(--text-mute); font-size: 0.86rem; }
-
-    .toast {
-      position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 16px);
-      background: #0f172a; color: var(--text); border: 1px solid var(--border-hi);
-      padding: 12px 20px; border-radius: 999px; font-size: 0.85rem; font-weight: 600;
-      box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: all 0.22s ease; z-index: 100; white-space: nowrap;
-    }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-    @media (max-width: 920px) {
-      .hero { grid-template-columns: 1fr; text-align: center; justify-items: center; }
-      .kpi-grid { width: 100%; }
-      .workspace { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      body { padding: 12px; }
-      .topbar, .hero, .card { padding: 16px; }
-      .key-btn { height: 52px; }
-    }
-  </style>
+/* ───── v5: vistas y calidad de aire ───── */
+.nav{display:flex;gap:6px;padding:6px;position:sticky;top:8px;z-index:20;overflow-x:auto}
+.nav button{flex:1;padding:11px 14px;border-color:transparent;background:transparent;color:var(--dim);white-space:nowrap}
+.nav button.on{background:linear-gradient(135deg,color-mix(in srgb,var(--info) 28%,transparent),rgba(46,230,166,.1));border-color:var(--line-hi);color:#fff}
+.view{display:grid;gap:14px;min-width:0;animation:enter .35s ease-out}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}}
+.two{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.gas-top{display:grid;gap:14px;grid-template-columns:1fr 1.4fr 1fr}
+body{--gas:var(--ok)}body[data-gas="warn"]{--gas:var(--warn)}body[data-gas="danger"]{--gas:var(--bad)}body[data-gas="off"]{--gas:var(--mute)}
+.gaspill{cursor:pointer}.gaspill .dot{--c:var(--gas)}
+.dial{width:100%;max-width:300px;margin:auto}
+#needle{transform-origin:150px 150px;transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.big{text-align:center;font:700 2.6rem var(--mono);color:var(--gas);line-height:1}
+.level{text-align:center;font:700 1rem var(--mono);letter-spacing:.12em;color:var(--gas)}
+#smoke{height:290px}
+#history{height:280px;touch-action:pan-y;cursor:crosshair}
+.four{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.steps{list-style:none;display:grid;gap:7px}
+.steps label{display:flex;gap:10px;align-items:center;padding:9px 12px;background:var(--inset);border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.steps input{accent-color:var(--ok);width:17px;height:17px;flex:none}
+.steps input:checked+span{text-decoration:line-through;color:var(--mute)}
+.chain{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chain button{padding:12px 6px;display:grid;gap:3px}.chain b{font:700 1rem var(--mono)}.chain span{font-size:.66rem;color:var(--mute);text-transform:uppercase}
+#alarm{position:fixed;left:50%;bottom:14px;transform:translate(-50%,180%);width:min(94vw,640px);z-index:45;padding:14px 18px;border-radius:15px;background:linear-gradient(135deg,#9f1239,#e11d48);box-shadow:0 20px 60px rgba(225,29,72,.55);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;visibility:hidden;transition:.35s}
+#alarm.show{transform:translate(-50%,0);visibility:visible}
+#alarm button{background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.4)}
+body[data-gas="danger"] #vignette{animation:flash 1.2s ease-in-out infinite}
+@media(max-width:1120px){.gas-top{grid-template-columns:1fr 1fr}.gas-top>:nth-child(2){grid-column:1/-1;order:-1}}
+@media(max-width:720px){.two,.gas-top{grid-template-columns:minmax(0,1fr)}.gas-top>:nth-child(2){grid-column:auto;order:0}.four,.chain{grid-template-columns:1fr 1fr}.nav button{padding:10px;font-size:.78rem}}
+</style>
 </head>
-<body>
-  <div class="shell">
-    <header class="panel topbar">
-      <div class="brand">
-        <div class="logo-badge" aria-hidden="true">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
-          </svg>
-        </div>
+<body data-state="unknown">
+<div id="boot" aria-hidden="true"><strong>VAULTGUARD</strong><div class="load"><i></i></div><div>Inicializando centro de control…</div></div>
+<canvas id="fx" aria-hidden="true"></canvas><div id="vignette" aria-hidden="true"></div>
+<main class="shell">
+  <header class="panel top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div><h1>VaultGuard Pro<small>v5.0</small></h1><div class="sub">CENTRO DE CONTROL · ESP32 · FIREBASE RTDB</div></div>
+    </div>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="Fuente de datos">
+        <button class="btn" id="modeLive" type="button">En vivo</button>
+        <button class="btn" id="modeSim" type="button">Simulador</button>
+      </div>
+      <div class="pill" role="status"><i class="dot" id="connDot"></i><span id="connText">Conectando…</span></div>
+      <button class="pill gaspill" id="gasPill" type="button"><i class="dot"></i><span id="gasPillText">Aire: sin datos</span></button>
+      <div class="pill" id="clock">--:--:--</div>
+      <button class="btn" id="btnCmd" type="button">Comandos · Ctrl K</button>
+      <button class="btn" id="btnTheme" type="button">Tema</button>
+      <button class="btn" id="btnFull" type="button">Presentación</button>
+      <button class="btn on" id="btnSound" type="button" aria-pressed="true">Sonido ON</button>
+      <button class="btn" id="btnNotif" type="button">Notificaciones</button>
+    </div>
+  </header>
+
+  <div class="banner" id="simBanner" hidden>MODO SIMULADOR: los datos son ficticios y no se toca tu base de datos. PIN de prueba: 1234</div>
+
+  <nav class="panel nav" id="nav" aria-label="Secciones">
+    <button class="on" data-view="panel" type="button">Bóveda</button>
+    <button data-view="gas" type="button">Gas y humo</button>
+    <button data-view="audit" type="button">Auditoría y analítica</button>
+  </nav>
+  <div class="view" id="view-panel">
+  <div class="grid">
+    <section class="panel card a-vault">
+      <div class="head"><h2>Gemelo digital de la bóveda</h2><span class="tag" id="syncTag">sin datos</span></div>
+      <div class="stage" id="stage"><svg class="door" id="door" viewBox="0 0 400 400" role="img" aria-label="Representación de la puerta de la bóveda"></svg></div>
+      <div aria-live="polite"><div class="state" id="stateText">SIN DATOS</div><p class="event" id="eventText">Esperando telemetría…</p></div>
+      <div class="kpis">
+        <div class="kpi"><span>Intentos fallidos</span><b id="triesText">–/3</b><span class="tries" id="tries"><i></i><i></i><i></i></span></div>
+        <div class="kpi"><span>Cerradura</span><b id="lockText">—</b></div>
+        <div class="kpi"><span>Alerta</span><b id="alertText">—</b></div>
+      </div>
+      <div class="link" aria-hidden="true">
+        <div class="node">CONSOLA</div><div class="wire"><i id="wireA"></i></div>
+        <div class="node" id="cloudName">FIREBASE</div><div class="wire"><i id="wireB"></i></div>
+        <div class="node">ESP32</div>
+      </div>
+      <ol class="pipe" aria-label="Seguimiento de la orden de apertura">
+        <li id="p0">1 · Orden en la nube</li><li id="p1">2 · Leída por ESP32</li><li id="p2">3 · Apertura confirmada</li>
+      </ol>
+    </section>
+
+    <section class="panel card a-ctl">
+      <div class="head"><h2>Control remoto</h2><span class="tag">PIN · 4 dígitos</span></div>
+      <div class="seg tabs">
+        <button class="btn on" id="tabOpen" type="button">Abrir puerta</button>
+        <button class="btn" id="tabPin" type="button">Cambiar PIN</button>
+      </div>
+      <div class="pinbox"><p id="caption" aria-live="polite"></p><div class="dots" id="dots"><i></i><i></i><i></i><i></i></div></div>
+      <div class="pad" id="pad"></div>
+      <button class="panic" id="btnPanic" type="button"><span id="panicText">Mantén presionado: MODO PÁNICO</span></button>
+      <div class="sim" id="simTools" hidden>
+        <span class="tag">BANCO DE PRUEBAS</span>
         <div>
-          <div class="brand-title"><h1>VaultGuard Pro</h1><span class="version-tag">v2.0</span></div>
-          <div class="brand-sub">ESP32 SMART SAFE · FIREBASE RTDB</div>
+          <button class="btn" id="simBad" type="button">PIN erróneo en teclado</button>
+          <button class="btn" id="simOff" type="button">Desconectar ESP32</button>
+          <button class="btn" id="simReset" type="button">Reiniciar</button>
         </div>
-      </div>
-
-      <div class="top-controls">
-        <div id="connPill" class="status-pill"><span class="status-dot"></span><span id="connText">Conectando...</span></div>
-        <button id="btnSound" class="btn-icon active-toggle" type="button"><span id="soundLabel">Sonido ON</span></button>
-        <button id="btnNotif" class="btn-icon" type="button"><span id="notifLabel">Notificaciones</span></button>
-      </div>
-    </header>
-
-    <section id="heroCard" class="panel hero">
-      <div class="vault-ring" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path id="lockShackle" d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-      </div>
-
-      <div class="hero-info">
-        <div class="eyebrow">Estado de la Bóveda</div>
-        <div id="estadoTexto" class="hero-state">BLOQUEADA</div>
-        <p id="ultimoEvento" class="hero-event">Sincronizando telemetría con el ESP32...</p>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="kpi">
-          <span class="kpi-label">Intentos Fallidos</span>
-          <div class="kpi-val"><span id="intentosNum">0/3</span><span class="attempt-dots" id="attemptDots"><i></i><i></i><i></i></span></div>
-        </div>
-        <div class="kpi"><span class="kpi-label">Cerradura Servo</span><div class="kpi-val" id="cerraduraVal">CERRADA</div></div>
-        <div class="kpi"><span class="kpi-label">Latencia Nube</span><div class="kpi-val" id="latenciaVal">-- ms</div></div>
-        <div class="kpi"><span class="kpi-label">Último Sync</span><div class="kpi-val" id="horaSync">--:--:--</div></div>
       </div>
     </section>
 
-    <div class="workspace">
-      <section class="panel card">
-        <div class="card-head"><h2>Control Remoto</h2><span>PIN DE 4 DÍGITOS</span></div>
+    <section class="panel card a-tel">
+      <div class="head"><h2>Telemetría de red</h2><span class="tag" id="transport">—</span></div>
+      <canvas id="chart" aria-label="Gráfica de latencia hacia la nube"></canvas>
+      <div class="stats">
+        <div class="kpi"><span>Latencia actual</span><b id="sNow">—</b></div>
+        <div class="kpi"><span>Promedio</span><b id="sAvg">—</b></div>
+        <div class="kpi"><span>Percentil 95</span><b id="sP95">—</b></div>
+        <div class="kpi"><span>Jitter</span><b id="sJit">—</b></div>
+        <div class="kpi"><span>Pings exitosos</span><b id="sUp">—</b></div>
+        <div class="kpi"><span>Sesión</span><b id="sTime">00:00:00</b></div>
+      </div>
+      <div class="head"><h2>Inspector de datos</h2><span class="tag">PIN oculto</span></div>
+      <pre id="raw">{ }</pre>
+    </section>
+  </div>
 
-        <div class="tabs">
-          <button id="tabOpen" class="tab-btn active" type="button">Abrir Puerta</button>
-          <button id="tabPin" class="tab-btn" type="button">Cambiar PIN</button>
-        </div>
+  <section class="panel card"><div class="head"><h2>Índice de integridad</h2><span class="tag">calculado</span></div>
+    <div class="two"><div class="gauge"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="82" fill="none" stroke="#17223a" stroke-width="16"/><circle id="arc" cx="100" cy="100" r="82" fill="none" stroke-width="16" stroke-linecap="round" stroke-dasharray="515.2" stroke-dashoffset="515.2" transform="rotate(-90 100 100)"/></svg><b><output id="score">—</output><span>de 100</span></b></div>
+    <p class="event" id="scoreWhy" style="align-self:center">Esperando telemetría…</p></div>
+  </section>
+  </div>
 
-        <div class="pin-display">
-          <div id="pinCaption" class="pin-caption">Ingresa tu PIN actual para enviar orden de apertura</div>
-          <div class="pin-dots" id="pinDots">
-            <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
-          </div>
-        </div>
-
-        <div class="keypad-grid" id="keypad">
-          <button class="key-btn" data-key="1" type="button">1</button>
-          <button class="key-btn" data-key="2" type="button">2</button>
-          <button class="key-btn" data-key="3" type="button">3</button>
-          <button class="key-btn" data-key="4" type="button">4</button>
-          <button class="key-btn" data-key="5" type="button">5</button>
-          <button class="key-btn" data-key="6" type="button">6</button>
-          <button class="key-btn" data-key="7" type="button">7</button>
-          <button class="key-btn" data-key="8" type="button">8</button>
-          <button class="key-btn" data-key="9" type="button">9</button>
-          <button class="key-btn key-action" data-key="clear" type="button">Borrar</button>
-          <button class="key-btn" data-key="0" type="button">0</button>
-          <button id="btnSubmitPin" class="key-btn key-action key-submit" data-key="submit" type="button">Abrir</button>
-        </div>
-
-        <div class="emergency-bar">
-          <button id="btnPanico" class="btn-panic" type="button"><span id="panicoLabel">Activar Modo Pánico</span></button>
-          <button id="btnSync" class="btn-icon" type="button">Sync</button>
+  <div class="view" id="view-gas" hidden>
+    <div class="gas-top">
+      <section class="panel card"><div class="head"><h2>Índice de gas</h2><span class="tag" id="gasTag">sin sensor</span></div>
+        <svg class="dial" id="dial" viewBox="0 0 300 175" role="img" aria-label="Medidor del índice de gas"></svg>
+        <div class="big" id="gasVal">—</div><div class="level" id="gasLevel">SIN DATOS</div>
+        <p class="event" id="gasAdvice" style="text-align:center">Conecta el MQ-135 o usa el simulador.</p>
+      </section>
+      <section class="panel card"><div class="head"><h2>Cámara de aire en vivo</h2><span class="tag">toca para dispersar</span></div>
+        <canvas id="smoke" aria-label="Animación de la concentración dentro de la caja"></canvas>
+        <div class="four">
+          <div class="kpi"><span>Tendencia</span><b id="trend">—</b></div>
+          <div class="kpi"><span>Mínimo</span><b id="gMin">—</b></div>
+          <div class="kpi"><span>Promedio</span><b id="gAvg">—</b></div>
+          <div class="kpi"><span>Máximo</span><b id="gMax">—</b></div>
         </div>
       </section>
-
-      <section class="panel card">
-        <div class="card-head"><h2>Auditoría de Eventos</h2><span id="logCount">0 registros</span></div>
-        <div class="log-toolbar">
-          <div class="filter-group">
-            <button class="chip active" data-filter="all" type="button">Todos</button>
-            <button class="chip" data-filter="alert" type="button">Alertas</button>
-            <button class="chip" data-filter="access" type="button">Accesos</button>
-          </div>
-          <div class="filter-group">
-            <button id="btnExport" class="btn-icon" type="button">CSV</button>
-            <button id="btnClearLog" class="btn-icon" type="button">Limpiar</button>
-          </div>
+      <section class="panel card"><div class="head"><h2>Umbrales y alarma</h2><span class="tag">consola</span></div>
+        <label>Precaución desde <output id="warnOut"></output><input type="range" id="warnThr" min="10" max="80" step="1"></label>
+        <label>Peligro desde <output id="dangerOut"></output><input type="range" id="dangerThr" min="20" max="95" step="1"></label>
+        <div class="two"><div class="kpi"><span>Episodios de peligro</span><b id="episodes">0</b></div><div class="kpi"><span>Tiempo en peligro</span><b id="dangerTime">0 s</b></div></div>
+        <button class="btn" id="btnSiren" type="button">Probar sirena</button>
+        <div class="sim" id="gasSim" hidden><span class="tag">INYECTOR DE ESCENARIOS</span>
+          <label>Concentración simulada <output id="simOut">5</output><input type="range" id="gasSlider" min="0" max="100" value="5"></label>
+          <div><button class="btn" data-gas="5" type="button">Aire limpio</button><button class="btn" data-gas="46" type="button">Humo leve</button><button class="btn" data-gas="88" type="button">Fuga intensa</button><button class="btn" id="btnTour" type="button">Demo automática</button></div>
         </div>
-        <ul id="logList" class="log-list"></ul>
+      </section>
+    </div>
+    <section class="panel card"><div class="head"><h2>Historial interactivo</h2>
+        <div class="bar"><div class="seg" id="windows"><button class="btn on" data-s="60" type="button">1 min</button><button class="btn" data-s="300" type="button">5 min</button><button class="btn" data-s="900" type="button">15 min</button></div>
+        <button class="btn" id="btnPause" type="button">Pausar</button><button class="btn" id="btnGasCsv" type="button">Exportar lecturas</button></div></div>
+      <canvas id="history" aria-label="Historial del índice de gas"></canvas>
+    </section>
+    <div class="two">
+      <section class="panel card"><div class="head"><h2>Cadena de medición</h2><span class="tag">toca cada etapa</span></div>
+        <div class="chain" id="chain">
+          <button type="button" data-i="0"><span>Salida sensor</span><b id="cVolt">—</b></button>
+          <button type="button" data-i="1"><span>Lectura ADC</span><b id="cAdc">—</b></button>
+          <button type="button" data-i="2"><span>Rs / R0</span><b id="cRatio">—</b></button>
+          <button type="button" data-i="3"><span>Índice</span><b id="cIdx">—</b></button>
+        </div>
+        <p class="event" id="chainHelp">Selecciona una etapa para ver cómo se calcula.</p>
+      </section>
+      <section class="panel card"><div class="head"><h2>Protocolo de respuesta</h2><span class="tag" id="protoCount">0/5</span></div>
+        <ul class="steps" id="steps"></ul>
       </section>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div class="view" id="view-audit" hidden>
+  <div class="analytics">
+    <section class="panel card"><div class="head"><h2>Actividad de hoy por hora</h2><span class="tag">según el registro</span></div><div class="bars" id="bars"></div><div class="axis"><span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span></div></section>
+    <section class="panel card"><div class="head"><h2>Distribución de eventos</h2></div><div class="mix"><div class="donut" id="donut"><b id="total">0</b></div><div class="legend" id="legend"></div></div></section>
+  </div>
 
-  <script>
-    const DB_URL = "https://proyecto-esp32-a862e-default-rtdb.firebaseio.com/caja.json";
-    const POLL_MS = 2500;
-    const STORAGE_KEY = "vaultguard_pro_logs_v2";
-    const $ = (id) => document.getElementById(id);
+  <section class="panel card">
+    <div class="head"><h2>Auditoría de eventos</h2><span class="tag" id="logCount"></span></div>
+    <div class="bar">
+      <div class="seg" id="filters">
+        <button class="btn on" data-f="all" type="button">Todos</button>
+        <button class="btn" data-f="alert" type="button">Alertas</button>
+        <button class="btn" data-f="access" type="button">Accesos</button>
+        <button class="btn" data-f="info" type="button">Sistema</button>
+      </div>
+      <input type="search" id="search" placeholder="Buscar evento…" aria-label="Buscar evento">
+      <button class="btn" id="btnCsv" type="button">Exportar CSV</button>
+      <button class="btn" id="btnJson" type="button">JSON</button>
+      <button class="btn" id="btnClear" type="button">Limpiar</button>
+    </div>
+    <div class="table"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Estado</th><th>Detalle</th></tr></thead><tbody id="logBody"></tbody></table></div>
+  </section>
+</div>
+</main>
+<div id="alarm" role="alert"><div><b>ALERTA DE GAS O HUMO</b><div id="alarmText"></div></div><div class="bar"><button class="btn" id="btnMute" type="button">Silenciar 60 s</button><button class="btn" id="btnSee" type="button">Ver detalle</button></div></div>
+<div class="toast" id="toast" role="status"></div>
+<dialog id="palette" aria-label="Paleta de comandos"><input type="search" id="cmdInput" placeholder="Escribe un comando…" autocomplete="off"><div id="cmdList"></div></dialog>
 
-    let soundEnabled = true, activeMode = "open", pinBuffer = "", claveActualCache = "7777";
-    let activeFilter = "all", lastState = null, lastEvent = null, lastAlert = false;
-    let logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    let audioCtx = null;
+<script>
+"use strict";
+const CFG = Object.freeze({
+  base: "https://proyecto-esp32-a862e-default-rtdb.firebaseio.com/caja",
+  pollMs: 2500, pingMs: 3000, timeoutMs: 8000, ackMs: 12000,
+  holdMs: 1200, maxTries: 3, lockMs: 30000, maxLogs: 200, samples: 60
+});
+const $ = id => document.getElementById(id);
+const hhmmss = (d = new Date()) => d.toLocaleTimeString("es-EC", { hour12: false });
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
 
-    function playTone(freq, duration = 0.06, type = "sine", vol = 0.08) {
-      if (!soundEnabled) return;
+/* ───────── Transporte: Firebase en tiempo real (SSE) con respaldo por sondeo ───────── */
+class FirebaseLink {
+  constructor(onData, onStatus, onPing) {
+    Object.assign(this, { onData, onStatus, onPing, data: null, timers: [], es: null, alive: false, lastMsg: 0, writeGen: 0, polling: false });
+  }
+  start() {
+    this.alive = true; this.openStream(); this.ping();
+    this.timers.push(setInterval(() => this.ping(), CFG.pingMs));
+    this.timers.push(setInterval(() => this.watchdog(), CFG.pollMs));
+  }
+  stop() { this.alive = false; this.timers.forEach(clearInterval); this.es?.close(); }
+  openStream() {
+    this.es?.close(); this.streamOk = false; this.lastMsg = Date.now();
+    if (!window.EventSource) return;
+    const es = this.es = new EventSource(CFG.base + ".json");
+    const handle = merge => e => {
+      if (!this.alive || es !== this.es) return;
       try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.value = freq;
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
-      } catch (_) {}
+        const { path, data } = JSON.parse(e.data);
+        this.apply(path, data, merge);
+        this.streamOk = true; this.lastMsg = Date.now();
+        this.onStatus("online", "Tiempo real (SSE)"); this.emit();
+      } catch { this.streamOk = false; }
+    };
+    es.addEventListener("put", handle(false));
+    es.addEventListener("patch", handle(true));
+    es.addEventListener("keep-alive", () => { this.lastMsg = Date.now(); });
+    es.addEventListener("cancel", () => { this.streamOk = false; this.onStatus("offline", "Permiso denegado"); });
+    es.onerror = () => { this.streamOk = false; };
+  }
+  apply(path, value, merge) {
+    const keys = path.split("/").filter(Boolean);
+    const root = { r: this.data };
+    let obj = root, key = "r";
+    for (const k of keys) {
+      if (!obj[key] || typeof obj[key] !== "object") obj[key] = {};
+      obj = obj[key]; key = k;
     }
-
-    const nowTime = () => new Date().toLocaleTimeString("es-EC", { hour12: false });
-    const nowDate = () => new Date().toLocaleDateString("es-EC");
-
-    function showToast(msg) {
-      const t = $("toast"); t.textContent = msg; t.classList.add("show");
-      clearTimeout(showToast._t); showToast._t = setTimeout(() => t.classList.remove("show"), 2600);
-    }
-
-    function saveLogs() { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs.slice(0, 60))); }
-
-    function addLog(title, detail, type = "info") {
-      logs.unshift({ title, detail, type, time: nowTime(), date: nowDate() });
-      if (logs.length > 60) logs.pop();
-      saveLogs(); renderLogs();
-    }
-
-    function renderLogs() {
-      const list = $("logList");
-      const filtered = activeFilter === "all" ? logs : logs.filter(l => l.type === activeFilter);
-      $("logCount").textContent = `${filtered.length} registros`;
-      if (!filtered.length) {
-        list.innerHTML = `<li class="empty-log">No hay eventos registrados en esta categoría.</li>`;
-        return;
-      }
-      list.innerHTML = filtered.map(item => `
-        <li class="log-item type-${item.type}">
-          <div><strong>${item.title}</strong><p>${item.detail}</p></div>
-          <span class="log-time">${item.time}</span>
-        </li>
-      `).join("");
-    }
-
-    function updatePinDots(isError = false) {
-      const dots = $("pinDots").children;
-      for (let i = 0; i < 4; i++) {
-        dots[i].classList.toggle("filled", i < pinBuffer.length);
-        dots[i].classList.toggle("error", isError);
-      }
-    }
-
-    function setMode(mode) {
-      activeMode = mode; pinBuffer = ""; updatePinDots();
-      $("tabOpen").classList.toggle("active", mode === "open");
-      $("tabPin").classList.toggle("active", mode === "pin");
-      $("pinCaption").textContent = mode === "open"
-        ? "Ingresa tu PIN actual para enviar orden de apertura"
-        : "Ingresa el nuevo PIN de 4 dígitos para guardar en la bóveda";
-      const submitBtn = $("btnSubmitPin");
-      submitBtn.textContent = mode === "open" ? "Abrir" : "Guardar";
-      submitBtn.classList.toggle("mode-save", mode === "pin");
-    }
-
-    async function patchFirebase(payload) {
-      const res = await fetch(DB_URL, {
-        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
-      });
+    if (merge) obj[key] = { ...(obj[key] || {}), ...value };
+    else obj[key] = value;
+    this.data = root.r;
+  }
+  emit() { this.onData(this.data ? { ...this.data } : null); }
+  async request(url, opts = {}) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), CFG.timeoutMs);
+    try {
+      const res = await fetch(url, { cache: "no-store", ...opts, signal: ctl.signal });
       if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } finally { clearTimeout(t); }
+  }
+  async ping() {
+    const t0 = performance.now();
+    try { await this.request(CFG.base + "/estado.json"); if (this.alive) this.onPing(Math.round(performance.now() - t0)); }
+    catch { if (this.alive) this.onPing(null); }
+  }
+  async watchdog() {
+    const silent = Date.now() - this.lastMsg;
+    if (silent > 70000 || (this.es?.readyState === 2 && silent > 10000)) this.openStream();
+    if (this.streamOk && this.es.readyState === 1) return;
+    if (this.polling) return;
+    this.polling = true;
+    const gen = this.writeGen;
+    try {
+      const data = await this.request(CFG.base + ".json");
+      if (this.alive && gen === this.writeGen) { this.data = data; this.onStatus("online", "Sondeo HTTP"); this.emit(); }
+    } catch { if (this.alive) this.onStatus("offline", "Sin conexión"); }
+    finally { this.polling = false; }
+  }
+  async patch(payload) {
+    this.writeGen++;
+    await this.request(CFG.base + ".json", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    this.writeGen++;
+  }
+}
+
+/* ───────── Gemelo simulado: mismo contrato, sin red ───────── */
+class SimLink {
+  constructor(onData, onStatus, onPing) { Object.assign(this, { onData, onStatus, onPing, timers: new Set(), deviceUp: true }); this.reset(false); }
+  later(fn, ms) { const t = setTimeout(() => { this.timers.delete(t); fn(); }, ms); this.timers.add(t); }
+  start() {
+    this.onStatus("online", "Simulador local"); this.emit();
+    this.sensor = setInterval(() => this.sense(), 1000);
+    this.pinger = setInterval(() => this.onPing(Math.round(45 + Math.random() * 40 + (Math.random() > .93 ? 90 : 0))), 1000);
+  }
+  sense() {
+    if (!this.deviceUp) return;
+    this.level = (this.level ?? 5) + ((this.target ?? 5) - (this.level ?? 5)) * .28;
+    const idx = Math.max(0, Math.min(100, this.level + (Math.random() - .5) * 2)), ratio = 1 - idx * .008;
+    const volt = 5 / (4 * ratio + 1);
+    this.seq = (this.seq || 0) + 1;
+    this.data.gas = { seq: this.seq, volt: +volt.toFixed(3), adc: Math.round(volt / 1.5 / 3.3 * 4095), ratio: +ratio.toFixed(3), calentando: 0 };
+    this.emit();
+  }
+  stop() { clearInterval(this.sensor); clearInterval(this.pinger); this.timers.forEach(clearTimeout); }
+  reset(notify = true) {
+    this.timers.forEach(clearTimeout); this.timers.clear(); this.level = this.target = 5;
+    this.data = { estado: "BLOQUEADA", ultimoEvento: "Sistema simulado listo", intentosFallidos: 0, alertaActiva: false, claveActual: "1234", ordenAbrir: false };
+    if (notify) this.emit();
+  }
+  emit() { this.onData({ ...this.data }); }
+  async patch(p) {
+    Object.assign(this.data, p); this.emit();
+    if (p.ordenAbrir && this.deviceUp) {
+      this.later(() => { if (this.data.ordenAbrir) { Object.assign(this.data, { ordenAbrir: false }); this.emit(); } else return;
+        this.later(() => {
+          if (this.data.estado === "BLOQUEO_PANICO") return;
+          Object.assign(this.data, { estado: "ABIERTA", intentosFallidos: 0, alertaActiva: false, ultimoEvento: "Apertura remota ejecutada" }); this.emit();
+          this.later(() => { if (this.data.estado === "ABIERTA") { Object.assign(this.data, { estado: "BLOQUEADA", ultimoEvento: "Cierre automático" }); this.emit(); } }, 6000);
+        }, 700);
+      }, 900);
     }
+  }
+  wrongPin() {
+    if (!this.deviceUp || this.data.estado === "BLOQUEO_PANICO") return;
+    const n = Math.min(CFG.maxTries, this.data.intentosFallidos + 1), locked = n >= CFG.maxTries;
+    Object.assign(this.data, { intentosFallidos: n, alertaActiva: locked, estado: locked ? "ALERTA_BLOQUEO" : "BLOQUEADA", ultimoEvento: `PIN erróneo en teclado físico (${n}/${CFG.maxTries})` });
+    this.emit();
+  }
+}
 
-    async function handlePinSubmit() {
-      if (pinBuffer.length !== 4) {
-        playTone(220, 0.14, "sawtooth", 0.08); updatePinDots(true);
-        showToast("Ingresa los 4 dígitos del PIN.");
-        setTimeout(() => updatePinDots(false), 400);
-        return;
-      }
-      if (activeMode === "open") {
-        if (pinBuffer !== claveActualCache) {
-          playTone(180, 0.22, "sawtooth", 0.1); updatePinDots(true);
-          addLog("PIN REMOTO INCORRECTO", "Intento de apertura rechazado desde la web", "alert");
-          showToast("PIN incorrecto.");
-          setTimeout(() => { pinBuffer = ""; updatePinDots(false); }, 450);
-          return;
-        }
-        try {
-          await patchFirebase({ ordenAbrir: true, ultimoEvento: "Orden de apertura remota enviada" });
-          playTone(660, 0.08); setTimeout(() => playTone(880, 0.12), 90);
-          pinBuffer = ""; updatePinDots(); showToast("Orden de apertura enviada al ESP32.");
-        } catch (_) { showToast("Error de conexión con Firebase."); }
-      } else {
-        try {
-          await patchFirebase({ claveActual: pinBuffer, ultimoEvento: "PIN actualizado desde consola web" });
-          claveActualCache = pinBuffer;
-          playTone(587, 0.08); setTimeout(() => playTone(784, 0.12), 90);
-          addLog("PIN ACTUALIZADO", "Nueva clave sincronizada con Firebase", "access");
-          pinBuffer = ""; updatePinDots(); setMode("open"); showToast("Nuevo PIN guardado correctamente.");
-        } catch (_) { showToast("No se pudo guardar el nuevo PIN."); }
-      }
+/* ───────── Estado de la aplicación ───────── */
+const app = {
+  link: null, sim: false, online: false, data: null, prev: null,
+  mode: "open", step: "current", pin: "", newPin: "", busy: false,
+  cmd: null, fails: 0, lockedUntil: 0, filter: "all", query: "", sound: true,
+  samples: [], pings: 0, ok: 0, started: Date.now()
+};
+let logs = store.get("vaultguard_pro_logs_v2", []);
+if (!Array.isArray(logs)) logs = [];
+let simLogs = [];
+const activeLogs = () => app.sim ? simLogs : logs;
+
+/* ───────── Sonido, avisos, registro ───────── */
+let audio;
+function tone(freq, dur = .07, type = "sine", delay = 0) {
+  if (!app.sound) return;
+  try {
+    audio ||= new (window.AudioContext || window.webkitAudioContext)();
+    audio.resume();
+    const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + delay;
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(.07, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur);
+  } catch {}
+}
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 3200); }
+function pulse(id, dir) { const el = $(id); el.className = ""; void el.offsetWidth; el.className = dir; }
+function addLog(title, detail, type = "info") {
+  const d = new Date(), list = activeLogs();
+  list.unshift({ title: String(title), detail: String(detail), type, time: hhmmss(d), date: d.toLocaleDateString("es-EC") });
+  list.length = Math.min(list.length, CFG.maxLogs);
+  if (!app.sim) store.set("vaultguard_pro_logs_v2", logs);
+  renderLogs();
+}
+const visibleLogs = () => activeLogs().filter(l => (app.filter === "all" || l.type === app.filter) && `${l.title} ${l.detail}`.toLowerCase().includes(app.query));
+function renderLogs() {
+  renderStats();
+  const rows = visibleLogs(), body = $("logBody");
+  $("logCount").textContent = `${rows.length} registros${app.sim ? " (simulados)" : ""}`;
+  body.replaceChildren();
+  if (!rows.length) {
+    const td = body.insertRow().insertCell(); td.colSpan = 4; td.className = "empty"; td.textContent = "No hay eventos para mostrar."; return;
+  }
+  const names = { alert: "ALERTA", access: "ACCESO", info: "SISTEMA" };
+  for (const l of rows) {
+    const tr = body.insertRow();
+    const a = tr.insertCell(); a.className = "m"; a.textContent = `${l.date} ${l.time}`;
+    const b = document.createElement("span"); b.className = "badge " + (names[l.type] ? l.type : "info"); b.textContent = names[l.type] || "SISTEMA"; tr.insertCell().append(b);
+    const c = tr.insertCell(); c.className = "m"; c.textContent = l.title;
+    tr.insertCell().textContent = l.detail;
+  }
+}
+
+/* ───────── Render del estado ───────── */
+function onData(raw) {
+  if (!raw || typeof raw !== "object") { app.data = null; renderState(); return; }
+  const d = {
+    estado: String(raw.estado || "DESCONOCIDO"),
+    evento: String(raw.ultimoEvento || "Sin actividad reciente"),
+    intentos: Math.min(CFG.maxTries, Math.max(0, Number(raw.intentosFallidos) || 0)),
+    alerta: raw.alertaActiva === true || raw.alertaActiva === "true",
+    clave: /^\d{4}$/.test(String(raw.claveActual)) ? String(raw.claveActual) : null,
+    orden: raw.ordenAbrir === true,
+    raw
+  };
+  const prev = app.prev; app.data = app.prev = d;
+  if (!prev || prev.estado !== d.estado || prev.evento !== d.evento) {
+    const danger = d.alerta || d.estado === "ALERTA_BLOQUEO" || d.estado === "BLOQUEO_PANICO";
+    addLog(d.estado, d.evento, danger ? "alert" : d.estado === "ABIERTA" ? "access" : "info");
+    if (prev && danger) { [0, .2, .4].forEach(t => tone(520, .13, "square", t)); notify(`VaultGuard: ${d.estado}`, d.evento); }
+    else if (prev && d.estado === "ABIERTA") { tone(660); tone(990, .14, "sine", .1); }
+  }
+  onSensors(raw.gas);
+  if (!prev || prev.estado !== d.estado || prev.evento !== d.evento) pulse("wireA", "rx");
+  $("syncTag").textContent = "sync " + hhmmss();
+  trackCommand(d);
+  renderState();
+}
+function renderState() {
+  const d = app.data;
+  const kind = !d || !app.online ? "unknown" : d.estado === "BLOQUEO_PANICO" ? "panic" : d.alerta || d.estado === "ALERTA_BLOQUEO" ? "alert" : d.estado === "ABIERTA" ? "open" : d.estado === "BLOQUEADA" ? "locked" : "unknown";
+  document.body.dataset.state = kind;
+  $("stateText").textContent = d ? d.estado.replaceAll("_", " ") : "SIN DATOS";
+  $("eventText").textContent = !d ? "Esperando telemetría…" : app.online ? d.evento : "Sin conexión: se muestra el último estado conocido";
+  $("triesText").textContent = d ? `${d.intentos}/${CFG.maxTries}` : "–/3";
+  [...$("tries").children].forEach((el, i) => el.classList.toggle("on", !!d && i < d.intentos));
+  $("lockText").textContent = !d ? "—" : d.estado === "ABIERTA" ? "ABIERTA" : "CERRADA";
+  $("alertText").textContent = !d ? "—" : d.alerta ? "ACTIVA" : "NO";
+  $("raw").textContent = d ? JSON.stringify({ ...d.raw, ...("claveActual" in d.raw && { claveActual: "••••" }) }, null, 2) : "{ }";
+  renderControls(); renderScore();
+}
+function setStatus(status, label) {
+  const was = app.online; app.online = status === "online";
+  $("connDot").style.setProperty("--c", app.online ? "var(--ok)" : "var(--bad)");
+  $("connText").textContent = app.online ? "Nube conectada" : label;
+  $("transport").textContent = label;
+  if (was !== app.online) { if (was) addLog("CONEXIÓN PERDIDA", label, "alert"); renderState(); }
+}
+
+/* ───────── Seguimiento de la orden (ACK extremo a extremo) ───────── */
+const pipe = (...s) => s.forEach((c, i) => $("p" + i).className = c);
+function trackCommand(d) {
+  const c = app.cmd; if (!c || !c.sent) return;
+  if (d.orden) c.seen = true;
+  if (d.estado === "ABIERTA") {
+    clearTimeout(c.timer); app.cmd = null; pipe("done", "done", "done"); pulse("wireB", "rx");
+    const ms = Math.round(performance.now() - c.t0);
+    addLog("APERTURA CONFIRMADA", `Confirmada en ${ms} ms`, "access"); toast(`Apertura confirmada en ${ms} ms.`);
+  } else if (c.seen && !d.orden) { pipe("done", "done", "run"); pulse("wireB", "rx"); }
+}
+async function expireCommand(c) {
+  if (app.cmd !== c) return;
+  app.cmd = null; pipe("done", "fail", "fail");
+  let detail = "Sin confirmación. Orden retirada para evitar una apertura tardía";
+  try { await c.link.patch({ ordenAbrir: false }); }
+  catch { detail = "Sin confirmación y NO se pudo retirar la orden. Revisa la bóveda"; }
+  if (c.link !== app.link) return;
+  addLog("ORDEN SIN RESPUESTA", detail, "alert"); toast(detail + "."); tone(180, .3, "sawtooth"); renderControls();
+}
+function cancelCommand() {
+  clearTimeout(app.cmd?.timer); app.cmd = null; pipe("", "", "");
+}
+
+/* ───────── PIN y comandos ───────── */
+const panicOn = () => app.data?.estado === "BLOQUEO_PANICO";
+const lockLeft = () => Math.max(0, Math.ceil((app.lockedUntil - Date.now()) / 1000));
+const flow = () => panicOn() ? "unpanic" : app.mode;
+function caption() {
+  if (!app.online) return "Controles deshabilitados: sin conexión";
+  if (lockLeft()) return `Teclado bloqueado por intentos fallidos: ${lockLeft()} s`;
+  if (!app.data?.clave) return "Esperando un PIN válido desde la base de datos";
+  if (flow() === "unpanic") return "Modo pánico activo. Ingresa el PIN para restaurar";
+  if (app.mode === "open") return app.cmd ? "Orden en curso, esperando al ESP32…" : "Ingresa tu PIN para enviar la orden de apertura";
+  return { current: "Paso 1 de 3: ingresa el PIN actual", new: "Paso 2 de 3: ingresa el nuevo PIN", confirm: "Paso 3 de 3: repite el nuevo PIN" }[app.step];
+}
+function renderControls() {
+  const ready = app.online && !!app.data?.clave && !app.busy && !lockLeft() && !(flow() === "open" && app.cmd);
+  $("caption").textContent = caption();
+  $("pad").querySelectorAll("button").forEach(b => b.disabled = !ready);
+  $("pad").querySelector('[data-k="ok"]').textContent = flow() === "unpanic" ? "Restaurar" : app.mode === "open" ? "Abrir" : app.step === "confirm" ? "Guardar" : "Seguir";
+  [...$("dots").children].forEach((d, i) => d.classList.toggle("on", i < app.pin.length));
+  $("tabOpen").classList.toggle("on", app.mode === "open");
+  $("tabPin").classList.toggle("on", app.mode === "pin");
+  const p = $("btnPanic");
+  p.disabled = !app.online || !app.data || panicOn();
+  p.classList.toggle("active", panicOn());
+  $("panicText").textContent = panicOn() ? "MODO PÁNICO ACTIVO" : "Mantén presionado: MODO PÁNICO";
+}
+function setMode(m) { app.mode = m; app.step = "current"; app.pin = app.newPin = ""; renderControls(); }
+function reject(msg) {
+  tone(180, .22, "sawtooth"); const d = $("dots"); d.classList.add("err"); toast(msg);
+  app.pin = ""; setTimeout(() => { d.classList.remove("err"); renderControls(); }, 400);
+}
+function checkPin(pin) {
+  if (pin === app.data.clave) { app.fails = 0; return true; }
+  app.fails++; addLog("PIN REMOTO INCORRECTO", `Intento ${app.fails}/${CFG.maxTries} desde la consola`, "alert");
+  if (app.fails >= CFG.maxTries) { app.fails = 0; app.lockedUntil = Date.now() + CFG.lockMs; try { sessionStorage.setItem("vg_lock", app.lockedUntil); } catch {} }
+  reject("PIN incorrecto."); return false;
+}
+async function submit() {
+  if (!app.online || !app.data?.clave || app.busy || lockLeft()) return;
+  if (app.pin.length !== 4) return reject("Ingresa los 4 dígitos.");
+  const pin = app.pin, link = app.link, f = flow();
+  if (f === "open") {
+    if (app.cmd) return;
+    if (!checkPin(pin)) return;
+    if (app.data.estado === "ABIERTA") return reject("La bóveda ya está abierta.");
+    app.pin = "";
+    const cmd = app.cmd = { link, t0: performance.now(), sent: false, seen: false };
+    pipe("run", "", ""); pulse("wireA", "tx"); renderControls();
+    try {
+      await link.patch({ ordenAbrir: true, ultimoEvento: "Orden de apertura remota enviada" });
+      if (app.cmd !== cmd) return;
+      cmd.sent = true; pipe("done", "run", ""); pulse("wireB", "tx"); tone(660);
+      cmd.timer = setTimeout(() => expireCommand(cmd), CFG.ackMs);
+      if (app.data) trackCommand(app.data);
+    } catch {
+      if (app.cmd !== cmd) return;
+      /* La escritura pudo llegar aunque se perdiera la respuesta */
+      expireCommand(cmd);
     }
+  } else if (f === "unpanic") {
+    if (!checkPin(pin)) return;
+    await send(link, { estado: "BLOQUEADA", alertaActiva: false, ordenAbrir: false, ultimoEvento: "Modo pánico desactivado desde consola web" }, "Bóveda restaurada.");
+  } else if (app.step === "current") {
+    if (!checkPin(pin)) return;
+    app.step = "new"; app.pin = ""; tone(700);
+  } else if (app.step === "new") {
+    if (pin === app.data.clave) return reject("El PIN nuevo debe ser distinto.");
+    if (/^(\d)\1{3}$/.test(pin) || ["1234", "4321"].includes(pin)) return reject("PIN demasiado predecible.");
+    app.newPin = pin; app.pin = ""; app.step = "confirm"; tone(700);
+  } else {
+    if (pin !== app.newPin) { app.step = "new"; return reject("No coinciden. Ingresa de nuevo el PIN nuevo."); }
+    if (await send(link, { claveActual: pin, ultimoEvento: "PIN actualizado desde consola web" }, "PIN actualizado.")) setMode("open");
+  }
+  renderControls();
+}
+async function send(link, payload, okMsg) {
+  app.busy = true; renderControls(); pulse("wireA", "tx");
+  try { await link.patch(payload); app.pin = ""; toast(okMsg); tone(590); tone(880, .12, "sine", .09); return true; }
+  catch { reject("No se pudo escribir en la nube."); return false; }
+  finally { app.busy = false; renderControls(); }
+}
+function press(k) {
+  const btn = $("pad").querySelector(`[data-k="${k}"]`);
+  if (btn.disabled) return;
+  if (k === "ok") return submit();
+  if (k === "del") app.pin = app.pin.slice(0, -1);
+  else if (app.pin.length < 4) app.pin += k;
+  tone(k === "del" ? 300 : 520 + Number(k) * 25, .045); renderControls();
+}
+async function panic() {
+  if (!app.online || panicOn()) return;
+  cancelCommand(); app.pin = ""; tone(240, .4, "square");
+  await send(app.link, { estado: "BLOQUEO_PANICO", alertaActiva: true, ordenAbrir: false, ultimoEvento: "Modo pánico activado desde consola web" }, "Modo pánico activado.");
+}
 
-    function sendPush(title, body) {
-      if ("Notification" in window && Notification.permission === "granted") {
-        try { new Notification(title, { body, tag: "vaultguard-pro", renotify: true }); } catch (_) {}
-      }
+/* ───────── Notificaciones ───────── */
+function notify(title, body) { if (window.Notification?.permission === "granted") { try { new Notification(title, { body, tag: "vaultguard" }); } catch {} } }
+function notifLabel() { const on = window.Notification?.permission === "granted"; $("btnNotif").classList.toggle("on", on); $("btnNotif").textContent = on ? "Notif. ON" : "Notificaciones"; }
+
+/* ───────── Telemetría ───────── */
+function onPing(ms) {
+  app.pings++; if (ms !== null) app.ok++;
+  app.samples.push(ms); if (app.samples.length > CFG.samples) app.samples.shift();
+  const v = app.samples.filter(x => x !== null), sorted = [...v].sort((a, b) => a - b);
+  const fmt = x => x === undefined || Number.isNaN(x) ? "—" : Math.round(x) + " ms";
+  const p95 = sorted[Math.ceil(sorted.length * .95) - 1];
+  $("sNow").textContent = fmt(ms ?? undefined);
+  $("sAvg").textContent = fmt(v.length ? v.reduce((a, b) => a + b, 0) / v.length : undefined);
+  $("sP95").textContent = fmt(p95);
+  $("sJit").textContent = fmt(v.length > 1 ? v.slice(1).reduce((s, x, i) => s + Math.abs(x - v[i]), 0) / (v.length - 1) : undefined);
+  $("sUp").textContent = (100 * app.ok / app.pings).toFixed(1) + " %";
+  draw(p95);
+}
+function draw(p95) {
+  const c = $("chart"), r = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  c.width = w * r; c.height = h * r;
+  const g = c.getContext("2d"); g.scale(r, r); g.font = "10px JetBrains Mono, monospace";
+  const max = Math.max(100, ...app.samples.map(x => x || 0)) * 1.2;
+  const X = i => 8 + (i + CFG.samples - app.samples.length) * (w - 16) / (CFG.samples - 1), Y = v => h - 10 - v / max * (h - 28);
+  g.strokeStyle = "rgba(148,163,184,.12)"; g.fillStyle = "#66758d";
+  for (let i = 1; i <= 3; i++) { const v = max * i / 3.3, y = Y(v); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); g.fillText(Math.round(v) + " ms", 6, y - 3); }
+  let run = [];
+  const flush = () => {
+    if (!run.length) return;
+    g.beginPath(); run.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+    g.strokeStyle = "#38bdf8"; g.lineWidth = 2; g.stroke();
+    g.lineTo(run.at(-1)[0], h); g.lineTo(run[0][0], h); g.fillStyle = "rgba(56,189,248,.12)"; g.fill(); run = [];
+  };
+  app.samples.forEach((v, i) => {
+    if (v === null) { flush(); g.fillStyle = "#ff4d6d"; g.fillRect(X(i) - 1, h - 22, 3, 16); }
+    else run.push([X(i), Y(v)]);
+  });
+  flush();
+  if (p95 !== undefined) { g.setLineDash([5, 5]); g.strokeStyle = "#fbbf24"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(p95)); g.lineTo(w, Y(p95)); g.stroke(); g.fillStyle = "#fbbf24"; g.fillText("p95", w - 26, Y(p95) - 4); }
+}
+
+/* ───────── Puerta SVG generada por código ───────── */
+function buildDoor() {
+  const rot = (n, fn) => Array.from({ length: n }, (_, i) => `<g transform="rotate(${i * 360 / n} 200 200)">${fn(i)}</g>`).join("");
+  $("door").innerHTML = `
+  <defs>
+    <radialGradient id="steel" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#34445f"/><stop offset=".55" stop-color="#141e31"/><stop offset="1" stop-color="#080d17"/></radialGradient>
+    <linearGradient id="chrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dbe7f7"/><stop offset=".45" stop-color="#5b6b85"/><stop offset="1" stop-color="#aebdd4"/></linearGradient>
+  </defs>
+  <g class="spin">${rot(72, i => `<rect x="199" y="6" width="2" height="${i % 6 ? 6 : 13}" fill="#52627d"/>`)}</g>
+  <g class="spin rev"><circle cx="200" cy="200" r="173" fill="none" style="stroke:var(--state)" stroke-width="2" stroke-dasharray="150 60 20 60"/></g>
+  <circle cx="200" cy="200" r="160" fill="#090f1b" stroke="#2a3750" stroke-width="8"/>
+  ${rot(8, () => `<g class="bolt"><rect x="188" y="35" width="24" height="52" rx="5" fill="url(#chrome)"/><rect x="194" y="41" width="12" height="5" rx="2" style="fill:var(--state)"/></g>`)}
+  <circle cx="200" cy="200" r="127" fill="url(#steel)" stroke="#40516e" stroke-width="3"/>
+  <circle cx="200" cy="200" r="104" fill="none" style="stroke:var(--state)" stroke-width="1.5" opacity=".55"/>
+  ${rot(24, () => `<circle cx="200" cy="84" r="3" fill="#6d7f9c"/>`)}
+  <g class="wheel">
+    ${rot(5, () => `<rect x="195" y="122" width="10" height="62" rx="5" fill="url(#chrome)"/><circle cx="200" cy="122" r="11" fill="url(#chrome)"/>`)}
+    <circle cx="200" cy="200" r="55" fill="none" stroke="url(#chrome)" stroke-width="8"/>
+  </g>
+  <circle cx="200" cy="200" r="27" fill="#0b1220" style="stroke:var(--state)" stroke-width="4"/>
+  <circle cx="200" cy="200" r="8" style="fill:var(--state)"/>`;
+}
+
+/* ───────── Gas y humo (MQ-135) ───────── */
+const gas = { seq: null, fresh: 0, v: null, idx: 0, hist: [], level: "off", episodes: 0, dangerMs: 0, last: 0, muted: 0, hover: null, paused: null, span: 60 };
+const LEVELS = {
+  off: ["SIN DATOS", "Conecta el MQ-135 o usa el simulador."],
+  heat: ["CALENTANDO", "El sensor necesita calentarse antes de medir."],
+  ok: ["NORMAL", "Aire cercano a la referencia calibrada."],
+  warn: ["PRECAUCIÓN", "Aumento de gases: ventila y busca el origen."],
+  danger: ["PELIGRO", "Concentración alta: sigue el protocolo de respuesta."]
+};
+const live = () => app.online && !!gas.v && Date.now() - gas.fresh < 8000;
+const warnAt = () => Number($("warnThr").value), dangerAt = () => Number($("dangerThr").value);
+const toIndex = ratio => Math.max(0, Math.min(100, (1 - ratio) / .8 * 100));
+function resetSensors() {
+  Object.assign(gas, { seq: null, fresh: 0, v: null, idx: 0, hist: [], level: "off", episodes: 0, dangerMs: 0, last: 0, muted: 0, hover: null, paused: null });
+  clearTimeout(tourTimer); $("btnPause").textContent = "Pausar"; $("gasSlider").value = 5; $("simOut").textContent = 5;
+  $("steps").querySelectorAll("input").forEach(i => i.checked = false); countSteps(); renderSensors();
+}
+function onSensors(s) {
+  if (!s || typeof s !== "object" || ![s.seq, s.volt, s.adc, s.ratio, s.calentando].every(Number.isFinite)) return;
+  if (s.seq === gas.seq) return;
+  const first = gas.seq === null; gas.seq = s.seq;
+  if (first) return; /* la primera lectura puede ser antigua */
+  const now = Date.now(), dt = live() ? now - gas.fresh : 0;
+  gas.v = { ...s }; gas.fresh = now; gas.idx = toIndex(s.ratio);
+  const fault = s.volt < .05 || s.ratio <= 0, heating = s.calentando > 0;
+  const prev = gas.level; let lv;
+  if (fault) lv = "off"; else if (heating) lv = "heat";
+  else if (gas.idx >= dangerAt() || (prev === "danger" && gas.idx >= dangerAt() - 5)) lv = "danger";
+  else if (gas.idx >= warnAt() || (prev === "warn" && gas.idx >= warnAt() - 5)) lv = "warn";
+  else lv = "ok";
+  if (!fault && !heating) { gas.hist.push({ t: now, i: gas.idx }); while (gas.hist.length > 1000 || now - gas.hist[0].t > 900000) gas.hist.shift(); }
+  if (prev === "danger") gas.dangerMs += dt;
+  gas.level = lv;
+  if (lv !== prev) {
+    const pct = Math.round(gas.idx);
+    if (lv === "danger") { gas.episodes++; gas.muted = 0; $("steps").querySelectorAll("input").forEach(i => i.checked = false); countSteps(); addLog("GAS / HUMO: PELIGRO", `Índice ${pct} de 100`, "alert"); notify("VaultGuard: gas o humo", `Índice ${pct} de 100`); }
+    else if (lv === "warn") addLog("GAS / HUMO: PRECAUCIÓN", `Índice ${pct} de 100`, "alert");
+    else if (lv === "ok" && (prev === "warn" || prev === "danger")) addLog("AIRE NORMALIZADO", `Índice ${pct} de 100`, "info");
+  }
+  renderSensors();
+}
+function renderSensors() {
+  const on = live(), lv = on ? gas.level : "off", v = gas.v, show = on && (lv === "ok" || lv === "warn" || lv === "danger");
+  document.body.dataset.gas = lv === "heat" ? "off" : lv;
+  const [name, advice] = LEVELS[lv];
+  $("gasTag").textContent = on ? "transmitiendo" : v ? "sin actualizar" : "sin sensor";
+  $("gasVal").textContent = show ? Math.round(gas.idx) : "—";
+  $("gasLevel").textContent = name;
+  $("gasAdvice").textContent = on && lv === "heat" ? `${advice} Faltan ${v.calentando} s.` : on && lv === "off" ? "Lectura inválida: revisa el cableado." : advice;
+  $("gasPillText").textContent = show ? `Aire: ${Math.round(gas.idx)} · ${name}` : `Aire: ${name.toLowerCase()}`;
+  $("needle").style.transform = `rotate(${(show ? gas.idx : 0) * 1.8 - 90}deg)`;
+  $("cVolt").textContent = on ? v.volt.toFixed(2) + " V" : "—"; $("cAdc").textContent = on ? v.adc : "—";
+  $("cRatio").textContent = show ? v.ratio.toFixed(2) : "—"; $("cIdx").textContent = show ? Math.round(gas.idx) : "—";
+  const win = gas.hist.filter(p => Date.now() - p.t <= gas.span * 1000).map(p => p.i);
+  $("gMin").textContent = win.length ? Math.round(Math.min(...win)) : "—";
+  $("gMax").textContent = win.length ? Math.round(Math.max(...win)) : "—";
+  $("gAvg").textContent = win.length ? Math.round(win.reduce((a, b) => a + b, 0) / win.length) : "—";
+  const t = gas.hist.slice(-6), d = t.length > 1 ? t.at(-1).i - t[0].i : 0;
+  $("trend").textContent = !show || t.length < 2 ? "—" : d > 4 ? "▲ Sube" : d < -4 ? "▼ Baja" : "● Estable";
+  $("episodes").textContent = gas.episodes; $("dangerTime").textContent = Math.round(gas.dangerMs / 1000) + " s";
+  const alarm = lv === "danger" && Date.now() > gas.muted;
+  $("alarm").classList.toggle("show", alarm);
+  if (alarm) {
+    $("alarmText").textContent = `Índice ${Math.round(gas.idx)} de 100`;
+    if (Date.now() - gas.last > 1600) { gas.last = Date.now(); siren(); }
+  }
+  drawHistory(); renderScore();
+}
+function siren() { [0, .2, .4, .6].forEach((t, i) => tone(i % 2 ? 620 : 940, .18, "square", t)); }
+function buildDial() {
+  const pt = (v, r) => { const a = Math.PI * (1 - v / 100); return `${150 + r * Math.cos(a)} ${150 - r * Math.sin(a)}`; };
+  const arc = (a, b, c) => `<path d="M ${pt(a, 120)} A 120 120 0 0 1 ${pt(b, 120)}" fill="none" stroke="${c}" stroke-width="18"/>`;
+  const w = warnAt(), d = dangerAt();
+  $("dial").innerHTML = arc(0, w, "var(--ok)") + arc(w, d, "var(--warn)") + arc(d, 100, "var(--bad)") +
+    Array.from({ length: 11 }, (_, i) => `<text x="${pt(i * 10, 96).split(" ")[0]}" y="${pt(i * 10, 96).split(" ")[1]}" fill="#66758d" font-size="9" text-anchor="middle">${i * 10}</text>`).join("") +
+    `<g id="needle"><path d="M146 150 L150 44 L154 150 Z" fill="#eef4ff"/></g><circle cx="150" cy="150" r="11" fill="#0b1322" stroke="#eef4ff" stroke-width="3"/>`;
+}
+function fit(c) {
+  const r = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (!w) return null;
+  c.width = w * r; c.height = h * r; const g = c.getContext("2d"); g.scale(r, r); g.font = "11px JetBrains Mono, monospace"; return { g, w, h };
+}
+function drawHistory() {
+  const f = fit($("history")); if (!f) return;
+  const { g, w, h } = f, end = gas.paused?.t ?? Date.now(), data = (gas.paused?.data ?? gas.hist).filter(p => p.t >= end - gas.span * 1000 && p.t <= end);
+  const L = 34, X = t => L + (t - end + gas.span * 1000) / (gas.span * 1000) * (w - L - 10), Y = i => h - 22 - i / 100 * (h - 34);
+  [[0, warnAt(), "46,230,166"], [warnAt(), dangerAt(), "251,191,36"], [dangerAt(), 100, "255,77,109"]].forEach(([a, b, c]) => { g.fillStyle = `rgba(${c},.07)`; g.fillRect(L, Y(b), w - L - 10, Y(a) - Y(b)); });
+  g.fillStyle = "#66758d"; g.strokeStyle = "rgba(148,163,184,.12)";
+  for (let i = 0; i <= 100; i += 25) { g.beginPath(); g.moveTo(L, Y(i)); g.lineTo(w - 10, Y(i)); g.stroke(); g.fillText(i, 6, Y(i) + 4); }
+  g.fillText(`hace ${gas.span / 60} min`, L, h - 6); g.textAlign = "right"; g.fillText(gas.paused ? "en pausa" : "ahora", w - 10, h - 6); g.textAlign = "left";
+  if (!data.length) { g.textAlign = "center"; g.fillText("Esperando lecturas del sensor", w / 2, h / 2); return; }
+  g.beginPath(); let last = 0;
+  data.forEach(p => { p.t - last > 8000 ? g.moveTo(X(p.t), Y(p.i)) : g.lineTo(X(p.t), Y(p.i)); last = p.t; });
+  g.strokeStyle = "#e8f6ff"; g.lineWidth = 2; g.stroke();
+  const mark = p => { g.fillStyle = p.i >= dangerAt() ? "#ff4d6d" : p.i >= warnAt() ? "#fbbf24" : "#2ee6a6"; g.beginPath(); g.arc(X(p.t), Y(p.i), 4, 0, 7); g.fill(); };
+  mark(data.at(-1));
+  if (gas.hover !== null) {
+    const p = data.reduce((a, b) => Math.abs(X(b.t) - gas.hover) < Math.abs(X(a.t) - gas.hover) ? b : a), x = X(p.t);
+    g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1; g.beginPath(); g.moveTo(x, 8); g.lineTo(x, h - 22); g.stroke(); mark(p);
+    const text = `${hhmmss(new Date(p.t))}  ·  índice ${Math.round(p.i)}`, tw = g.measureText(text).width + 18, bx = Math.min(w - tw - 6, Math.max(L, x - tw / 2));
+    g.fillStyle = "#0f192c"; g.fillRect(bx, 8, tw, 24); g.fillStyle = "#fff"; g.fillText(text, bx + 9, 24);
+  }
+}
+function initSmoke() {
+  const c = $("smoke"); let parts = [], touch = null;
+  c.onpointermove = c.onpointerdown = e => { const b = c.getBoundingClientRect(); touch = { x: e.clientX - b.left, y: e.clientY - b.top }; };
+  c.onpointerleave = c.onpointerup = () => touch = null;
+  const frame = () => {
+    if (!calm) requestAnimationFrame(frame);
+    const f = fit(c); if (!f) return;
+    const { g, w, h } = f, lv = document.body.dataset.gas, on = lv !== "off";
+    const want = on ? 12 + Math.round(gas.idx * 2.2) : 0;
+    while (parts.length < want) parts.push({ x: w / 2 + (Math.random() - .5) * w * .5, y: h - 25 - Math.random() * (calm ? h - 60 : 20), r: 6 + Math.random() * 16, vx: (Math.random() - .5) * .5, vy: -.3 - Math.random() * .9 });
+    if (parts.length > want) parts.splice(0, parts.length - want);
+    const rgb = lv === "danger" ? "255,92,110" : lv === "warn" ? "251,191,96" : "130,205,255";
+    for (const p of parts) {
+      if (touch) { const dx = p.x - touch.x, dy = p.y - touch.y, k = Math.hypot(dx, dy); if (k < 70 && k > 1) { p.x += dx / k * 4; p.y += dy / k * 4; } }
+      p.x += p.vx + Math.sin(p.y / 28) * .35; p.y += p.vy;
+      if (p.y < 20 || p.x < 15 || p.x > w - 15) { p.y = h - 22; p.x = w / 2 + (Math.random() - .5) * w * .5; }
+      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r); gr.addColorStop(0, `rgba(${rgb},.28)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7); g.fill();
     }
+    g.strokeStyle = "rgba(148,163,184,.4)"; g.lineWidth = 3; g.strokeRect(10, 10, w - 20, h - 20);
+    g.fillStyle = "#1c2940"; g.fillRect(w / 2 - 45, h - 28, 90, 18); g.fillStyle = "#cfe3ff"; g.textAlign = "center"; g.fillText("MQ-135", w / 2, h - 15);
+    if (!on) { g.fillStyle = "#66758d"; g.fillText("Sin lectura", w / 2, h / 2); }
+  };
+  frame(); if (calm) setInterval(frame, 1000);
+}
+function renderScore() {
+  const d = app.data, arc = $("arc");
+  if (!d || !app.online) { $("score").textContent = "—"; arc.style.strokeDashoffset = 515.2; $("scoreWhy").textContent = "Sin telemetría para evaluar"; return; }
+  const why = []; let n = 100;
+  const cut = (x, t) => { n -= x; why.push(`${t} (−${x})`); };
+  if (d.estado === "BLOQUEO_PANICO") cut(50, "Modo pánico"); else if (d.alerta || d.estado === "ALERTA_BLOQUEO") cut(45, "Alerta activa");
+  if (d.estado === "ABIERTA") cut(20, "Bóveda abierta");
+  if (d.intentos) cut(d.intentos * 8, "Intentos fallidos");
+  if (!live() || gas.level === "off" || gas.level === "heat") cut(15, "Sin medición de aire");
+  else if (gas.level === "danger") cut(40, "Gas o humo en peligro");
+  else if (gas.level === "warn") cut(15, "Gas o humo en precaución");
+  n = Math.max(0, n); $("score").textContent = n; arc.style.strokeDashoffset = 515.2 * (1 - n / 100);
+  arc.style.stroke = n >= 80 ? "var(--ok)" : n >= 50 ? "var(--warn)" : "var(--bad)";
+  $("scoreWhy").textContent = why.length ? why.join(" · ") : "Sin observaciones";
+}
+const STEPS = ["Alejar a las personas de la zona", "No encender llamas ni accionar interruptores si se sospecha gas", "Ventilar abriendo puertas y ventanas, si es seguro", "Identificar el origen desde un lugar seguro", "Llamar a emergencias (ECU 911) si persiste o hay fuego"];
+function countSteps() { $("protoCount").textContent = `${$("steps").querySelectorAll("input:checked").length}/${STEPS.length}`; }
+const HELP = [
+  "Voltaje analógico del módulo (alimentado a 5 V). Un divisor lo reduce antes de llegar al ESP32.",
+  "Conversión del ADC1 en GPIO34, de 0 a 4095.",
+  "Resistencia del sensor comparada con la medida en aire limpio. Cuanto más baja, más gases detecta.",
+  "Escala relativa: (1 − Rs/R0) ÷ 0,8 × 100. No equivale a ppm ni identifica qué gas es."
+];
+let tourTimer;
+function inject(v) { if (!app.sim) return; app.link.target = Number(v); $("gasSlider").value = v; $("simOut").textContent = v; }
+function tour() { clearTimeout(tourTimer); const path = [5, 46, 88, 46, 5]; let i = 0; const next = () => { if (!app.sim || i >= path.length) return; inject(path[i++]); tourTimer = setTimeout(next, 7000); }; next(); toast("Demo automática: 35 segundos."); }
+function showView(name) {
+  ["panel", "gas", "audit"].forEach(v => $("view-" + v).hidden = v !== name);
+  $("nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
+  holdEnd(); draw(); drawHistory();
+}
+function initGas() {
+  $("warnThr").value = store.get("vg_warn", 35); $("dangerThr").value = store.get("vg_danger", 60);
+  const thresholds = moved => {
+    if (warnAt() >= dangerAt() - 5) { if (moved === "warn") $("dangerThr").value = warnAt() + 6; else $("warnThr").value = dangerAt() - 6; }
+    $("warnOut").textContent = warnAt(); $("dangerOut").textContent = dangerAt(); store.set("vg_warn", warnAt()); store.set("vg_danger", dangerAt()); buildDial(); renderSensors();
+  };
+  $("steps").innerHTML = STEPS.map(t => `<li><label><input type="checkbox"><span>${t}</span></label></li>`).join(""); $("steps").onchange = countSteps;
+  thresholds("warn"); $("warnThr").oninput = () => thresholds("warn"); $("dangerThr").oninput = () => thresholds("danger");
+  $("nav").onclick = e => { const b = e.target.closest("button"); if (b) showView(b.dataset.view); };
+  $("gasPill").onclick = $("btnSee").onclick = () => { showView("gas"); scrollTo({ top: 0, behavior: "smooth" }); };
+  $("btnMute").onclick = () => { gas.muted = Date.now() + 60000; renderSensors(); };
+  $("btnSiren").onclick = () => app.sound ? siren() : toast("El sonido está desactivado.");
+  $("gasSlider").oninput = e => { clearTimeout(tourTimer); inject(e.target.value); };
+  $("gasSim").onclick = e => { const b = e.target.closest("[data-gas]"); if (b) { clearTimeout(tourTimer); inject(b.dataset.gas); } };
+  $("btnTour").onclick = tour;
+  $("windows").onclick = e => { const b = e.target.closest("button"); if (!b) return; gas.span = Number(b.dataset.s); [...$("windows").children].forEach(x => x.classList.toggle("on", x === b)); renderSensors(); };
+  $("btnPause").onclick = () => { gas.paused = gas.paused ? null : { t: Date.now(), data: [...gas.hist] }; $("btnPause").textContent = gas.paused ? "Reanudar" : "Pausar"; drawHistory(); };
+  $("history").onpointermove = $("history").onpointerdown = e => { gas.hover = e.clientX - $("history").getBoundingClientRect().left; drawHistory(); };
+  $("history").onpointerleave = () => { gas.hover = null; drawHistory(); };
+  $("btnGasCsv").onclick = () => { if (!gas.hist.length) return toast("Aún no hay lecturas."); download("﻿FechaHora,Indice\r\n" + gas.hist.map(p => `${new Date(p.t).toISOString()},${p.i.toFixed(1)}`).join("\r\n"), "csv", "text/csv;charset=utf-8", "gas"); };
+  $("chain").onclick = e => { const b = e.target.closest("button"); if (!b) return; $("chainHelp").textContent = HELP[b.dataset.i]; [...$("chain").children].forEach(x => x.classList.toggle("on", x === b)); };
+  addEventListener("resize", drawHistory); initSmoke();
+}
 
-    function renderVault(data, latencyMs) {
-      if (!data || typeof data !== "object") return;
-      $("connPill").classList.add("online"); $("connText").textContent = "Online";
-      $("latenciaVal").textContent = `${latencyMs} ms`; $("horaSync").textContent = nowTime();
+/* ───────── Analítica ───────── */
+function renderStats() {
+  const all = activeLogs(), today = new Date().toLocaleDateString("es-EC");
+  const hours = Array.from({ length: 24 }, () => ({ alert: 0, access: 0, info: 0 }));
+  const n = { alert: 0, access: 0, info: 0 };
+  for (const l of all) { const t = l.type in n ? l.type : "info"; n[t]++; if (l.date === today) hours[parseInt(l.time) % 24] && hours[parseInt(l.time) % 24][t]++; }
+  const max = Math.max(1, ...hours.map(h => h.alert + h.access + h.info));
+  $("bars").innerHTML = hours.map((h, i) => `<div title="${i}h: ${h.alert} alertas, ${h.access} accesos, ${h.info} sistema">${["info", "access", "alert"].map(t => `<i class="${t}" style="height:${h[t] / max * 100}%"></i>`).join("")}</div>`).join("");
+  const total = all.length, a = total ? n.alert / total * 100 : 0, b = a + (total ? n.access / total * 100 : 0);
+  $("total").textContent = total;
+  $("donut").style.background = total ? `conic-gradient(var(--bad) 0 ${a}%,var(--ok) 0 ${b}%,var(--info) 0)` : "#17223a";
+  $("legend").innerHTML = [["Alertas", "bad", n.alert], ["Accesos", "ok", n.access], ["Sistema", "info", n.info]].map(([t, c, v]) => `<div><i style="background:var(--${c})"></i>${t}: ${v}</div>`).join("");
+}
 
-      const estado = String(data.estado || "BLOQUEADA");
-      const evento = String(data.ultimoEvento || "Sin actividad reciente");
-      const intentos = Math.min(3, Math.max(0, Number(data.intentosFallidos ?? 0)));
-      const alerta = Boolean(data.alertaActiva);
-      if (typeof data.claveActual === "string" && /^\d{4}$/.test(data.claveActual)) claveActualCache = data.claveActual;
-
-      $("estadoTexto").textContent = estado; $("ultimoEvento").textContent = evento;
-      $("intentosNum").textContent = `${intentos}/3`;
-      $("cerraduraVal").textContent = estado === "ABIERTA" ? "ABIERTA" : "CERRADA";
-
-      const dotEls = $("attemptDots").children;
-      for (let i = 0; i < 3; i++) dotEls[i].classList.toggle("filled", i < intentos);
-
-      const hero = $("heroCard");
-      hero.classList.remove("state-open", "state-alert", "state-panic");
-      if (estado === "ABIERTA") {
-        hero.classList.add("state-open");
-        $("lockShackle").setAttribute("d", "M7 11V7a5 5 0 0 1 9.9-1");
-      } else {
-        $("lockShackle").setAttribute("d", "M7 11V7a5 5 0 0 1 10 0v4");
-        if (estado === "BLOQUEO_PANICO") hero.classList.add("state-panic");
-        else if (alerta || estado === "ALERTA_BLOQUEO") hero.classList.add("state-alert");
-      }
-
-      const inPanic = estado === "BLOQUEO_PANICO";
-      $("btnPanico").classList.toggle("active", inPanic);
-      $("panicoLabel").textContent = inPanic ? "Desactivar Modo Pánico" : "Activar Modo Pánico";
-
-      if (estado !== lastState || evento !== lastEvent) {
-        const logType = (alerta || estado === "BLOQUEO_PANICO" || estado === "ALERTA_BLOQUEO")
-          ? "alert" : (estado === "ABIERTA" ? "access" : "info");
-        addLog(estado, evento, logType);
-        if ((alerta && !lastAlert) || estado === "BLOQUEO_PANICO" || estado === "ALERTA_BLOQUEO") {
-          playTone(440, 0.15, "square", 0.08); sendPush(`VaultGuard: ${estado}`, evento);
-        }
-        lastState = estado; lastEvent = evento; lastAlert = alerta;
-      }
-    }
-
-    async function syncFirebase() {
-      const t0 = performance.now();
-      try {
-        const res = await fetch(DB_URL + "?t=" + Date.now(), { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        renderVault(data, Math.round(performance.now() - t0));
-      } catch (_) {
-        $("connPill").classList.remove("online"); $("connText").textContent = "Sin red"; $("latenciaVal").textContent = "-- ms";
-      }
-    }
-
-    $("keypad").addEventListener("click", (e) => {
-      const btn = e.target.closest("button"); if (!btn) return;
-      const key = btn.dataset.key;
-      if (key === "clear") { pinBuffer = pinBuffer.slice(0, -1); playTone(300, 0.04); updatePinDots(); }
-      else if (key === "submit") handlePinSubmit();
-      else if (/^\d$/.test(key) && pinBuffer.length < 4) { pinBuffer += key; playTone(520 + Number(key) * 25, 0.045); updatePinDots(); }
+/* ───────── Experiencia visual ───────── */
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function initFx() {
+  const c = $("fx"), g = c.getContext("2d"); let w, h, pts;
+  const size = () => { w = c.width = innerWidth; h = c.height = innerHeight; pts = Array.from({ length: Math.min(70, w / 18 | 0) }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25 })); };
+  const frame = () => {
+    g.clearRect(0, 0, w, h); const col = getComputedStyle(document.body).getPropertyValue("--state");
+    g.fillStyle = g.strokeStyle = col;
+    pts.forEach((p, i) => {
+      p.x = (p.x + p.vx + w) % w; p.y = (p.y + p.vy + h) % h; g.globalAlpha = .45; g.fillRect(p.x, p.y, 2, 2);
+      for (let j = i + 1; j < pts.length; j++) { const q = pts[j], k = Math.hypot(p.x - q.x, p.y - q.y); if (k < 120) { g.globalAlpha = (1 - k / 120) * .18; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke(); } }
     });
+    if (!calm) requestAnimationFrame(frame);
+  };
+  addEventListener("resize", size); size(); frame();
+}
+const THEMES = ["cyan", "violet", "gold"];
+function setTheme(t) { document.body.dataset.theme = THEMES.includes(t) ? t : "cyan"; store.set("vg_theme", document.body.dataset.theme); }
+const nextTheme = () => setTheme(THEMES[(THEMES.indexOf(document.body.dataset.theme) + 1) % 3]);
+function fullscreen() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => toast("Pantalla completa no disponible.")); }
 
-    document.addEventListener("keydown", (e) => {
-      if (/^\d$/.test(e.key) && pinBuffer.length < 4) { pinBuffer += e.key; playTone(520, 0.04); updatePinDots(); }
-      else if (e.key === "Backspace") { pinBuffer = pinBuffer.slice(0, -1); updatePinDots(); }
-      else if (e.key === "Enter") handlePinSubmit();
-    });
+/* La paleta no incluye órdenes de apertura: esas exigen el PIN */
+const COMMANDS = [
+  ["Ir a fuente: En vivo", () => $("modeLive").click()], ["Ir a fuente: Simulador", () => $("modeSim").click()],
+  ["Abrir puerta (pide PIN)", () => { showView("panel"); setMode("open"); $("pad").scrollIntoView({ block: "center" }); }],
+  ["Cambiar PIN", () => { showView("panel"); setMode("pin"); $("pad").scrollIntoView({ block: "center" }); }],
+  ["Cambiar tema de color", nextTheme], ["Modo presentación (pantalla completa)", fullscreen],
+  ["Activar o silenciar sonido", () => $("btnSound").click()], ["Ver bóveda", () => showView("panel")], ["Ver gas y humo", () => showView("gas")], ["Ver auditoría", () => showView("audit")],
+  ["Exportar auditoría CSV", () => $("btnCsv").click()], ["Exportar auditoría JSON", () => $("btnJson").click()]
+];
+function listCommands() {
+  const q = $("cmdInput").value.toLowerCase();
+  $("cmdList").replaceChildren(...COMMANDS.filter(c => c[0].toLowerCase().includes(q)).map(([name, run]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = name; b.onclick = () => { $("palette").close(); run(); }; return b; }));
+}
+function openPalette() { if ($("palette").open) return $("palette").close(); holdEnd(); $("cmdInput").value = ""; listCommands(); $("palette").showModal(); $("cmdInput").focus(); }
+function initV4() {
+  initFx(); setTheme(store.get("vg_theme", "cyan"));
+  $("btnTheme").onclick = nextTheme; $("btnFull").onclick = fullscreen; $("btnCmd").onclick = openPalette;
+  $("cmdInput").oninput = listCommands;
+  $("cmdInput").onkeydown = e => { if (e.key === "Escape") { e.preventDefault(); $("palette").close(); } if (e.key === "Enter") { e.preventDefault(); $("cmdList").firstChild?.click(); } };
+  $("palette").onclick = e => { if (e.target === $("palette")) $("palette").close(); };
+  document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openPalette(); } });
+  initGas();
+  if (!calm) {
+    $("stage").onpointermove = e => { const b = $("stage").getBoundingClientRect(), x = (e.clientX - b.left) / b.width - .5, y = (e.clientY - b.top) / b.height - .5; $("door").style.transform = `rotateY(${x * 18}deg) rotateX(${-y * 18}deg)`; };
+    $("stage").onpointerleave = () => $("door").style.transform = "";
+  }
+  setInterval(renderSensors, 1000);
+  const off = () => $("boot").classList.add("off"); $("boot").onclick = off; setTimeout(off, 1700);
+}
 
-    $("tabOpen").addEventListener("click", () => setMode("open"));
-    $("tabPin").addEventListener("click", () => setMode("pin"));
+/* ───────── Ciclo de vida ───────── */
+function connect(sim) {
+  cancelCommand(); app.link?.stop();
+  Object.assign(app, { sim, online: false, data: null, prev: null, samples: [], pings: 0, ok: 0, fails: 0, lockedUntil: 0, busy: false });
+  if (!sim) try { app.lockedUntil = Number(sessionStorage.getItem("vg_lock")) || 0; } catch {}
+  simLogs = [];
+  $("modeLive").classList.toggle("on", !sim); $("modeSim").classList.toggle("on", sim);
+  $("simBanner").hidden = $("simTools").hidden = $("gasSim").hidden = !sim;
+  $("simOff").textContent = "Desconectar ESP32"; $("cloudName").textContent = sim ? "SIMULADOR" : "FIREBASE";
+  $("connText").textContent = "Conectando…"; $("connDot").style.removeProperty("--c"); $("syncTag").textContent = "sin datos";
+  ["sNow", "sAvg", "sP95", "sJit", "sUp"].forEach(i => $(i).textContent = "—"); draw();
+  resetSensors(); setMode("open"); renderState(); renderLogs();
+  /* Cada enlace solo puede actualizar la interfaz mientras sea el activo */
+  const Link = sim ? SimLink : FirebaseLink;
+  const link = new Link(
+    d => app.link === link && onData(d),
+    (s, l) => app.link === link && setStatus(s, l),
+    ms => app.link === link && onPing(ms));
+  app.link = link; link.start();
+}
 
-    $("btnPanico").addEventListener("click", async () => {
-      const activate = !$("btnPanico").classList.contains("active");
-      try {
-        await patchFirebase({
-          estado: activate ? "BLOQUEO_PANICO" : "BLOQUEADA",
-          alertaActiva: activate,
-          ultimoEvento: activate ? "Modo pánico activado desde consola web" : "Modo pánico desactivado desde consola web"
-        });
-        playTone(activate ? 260 : 620, 0.14);
-        showToast(activate ? "Modo pánico activado." : "Bóveda restaurada a modo normal.");
-        syncFirebase();
-      } catch (_) { showToast("Error al cambiar el modo pánico."); }
-    });
+buildDoor();
+$("pad").innerHTML = ["1","2","3","4","5","6","7","8","9","del","0","ok"].map(k =>
+  `<button type="button" data-k="${k}" class="${k === "ok" ? "act go" : k === "del" ? "act" : ""}">${k === "del" ? "Borrar" : k === "ok" ? "Abrir" : k}</button>`).join("");
+$("pad").addEventListener("click", e => { const b = e.target.closest("button"); if (b) press(b.dataset.k); });
+document.addEventListener("keydown", e => {
+  if ($("palette").open || $("view-panel").hidden || e.target.matches("input") || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^\d$/.test(e.key)) press(e.key);
+  else if (e.key === "Backspace") press("del");
+  else if (e.key === "Enter" && !e.target.matches("button")) press("ok");
+});
+$("tabOpen").onclick = () => setMode("open");
+$("tabPin").onclick = () => setMode("pin");
 
-    $("btnSync").addEventListener("click", () => { syncFirebase(); showToast("Sincronizando estado..."); });
+let hold;
+const holdStart = () => { const p = $("btnPanic"); if (p.disabled || hold) return; p.classList.add("holding"); hold = setTimeout(() => { holdEnd(); panic(); }, CFG.holdMs); };
+const holdEnd = () => { clearTimeout(hold); hold = null; $("btnPanic").classList.remove("holding"); };
+$("btnPanic").addEventListener("pointerdown", e => { if (e.button === 0) holdStart(); });
+["pointerup", "pointerleave", "pointercancel", "blur", "keyup"].forEach(ev => $("btnPanic").addEventListener(ev, holdEnd));
+$("btnPanic").addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); holdStart(); } });
+$("btnPanic").addEventListener("contextmenu", e => e.preventDefault());
 
-    $("btnSound").addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
-      $("btnSound").classList.toggle("active-toggle", soundEnabled);
-      $("soundLabel").textContent = soundEnabled ? "Sonido ON" : "Sonido OFF";
-      if (soundEnabled) playTone(600, 0.06);
-    });
+$("modeLive").onclick = () => app.sim && connect(false);
+$("modeSim").onclick = () => !app.sim && connect(true);
+$("simBad").onclick = () => app.link.wrongPin?.();
+$("simReset").onclick = () => { cancelCommand(); app.link.reset?.(); };
+$("simOff").onclick = () => { app.link.deviceUp = !app.link.deviceUp; $("simOff").textContent = app.link.deviceUp ? "Desconectar ESP32" : "Reconectar ESP32"; toast(app.link.deviceUp ? "ESP32 simulado reconectado." : "ESP32 simulado desconectado."); };
+$("btnSound").onclick = e => { app.sound = !app.sound; e.target.textContent = app.sound ? "Sonido ON" : "Sonido OFF"; e.target.classList.toggle("on", app.sound); e.target.setAttribute("aria-pressed", app.sound); tone(600); };
+$("btnNotif").onclick = async () => { if (!window.Notification) return toast("Este navegador no admite notificaciones."); await Notification.requestPermission(); notifLabel(); };
+$("filters").onclick = e => { const b = e.target.closest("button"); if (!b) return; app.filter = b.dataset.f; [...$("filters").children].forEach(x => x.classList.toggle("on", x === b)); renderLogs(); };
+$("search").oninput = e => { app.query = e.target.value.trim().toLowerCase(); renderLogs(); };
+$("btnClear").onclick = () => { if (!confirm("¿Borrar el historial local de eventos?")) return; activeLogs().length = 0; if (!app.sim) store.set("vaultguard_pro_logs_v2", logs); renderLogs(); };
+function download(content, ext, mime, name = "auditoria") {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = `vaultguard-${name}${app.sim ? "-simulada" : ""}-${Date.now()}.${ext}`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const cell = v => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
+$("btnCsv").onclick = () => { const r = visibleLogs(); if (!r.length) return toast("No hay eventos para exportar."); download("\ufeff" + [["Fecha","Hora","Estado","Detalle","Tipo"], ...r.map(l => [l.date, l.time, l.title, l.detail, l.type])].map(x => x.map(cell).join(",")).join("\r\n"), "csv", "text/csv;charset=utf-8"); };
+$("btnJson").onclick = () => { const r = visibleLogs(); if (!r.length) return toast("No hay eventos para exportar."); download(JSON.stringify(r, null, 2), "json", "application/json"); };
 
-    $("btnNotif").addEventListener("click", async () => {
-      if (!("Notification" in window)) return showToast("Navegador sin soporte de notificaciones.");
-      const perm = await Notification.requestPermission();
-      $("notifLabel").textContent = perm === "granted" ? "Notif. ON" : "Notif. OFF";
-      $("btnNotif").classList.toggle("active-toggle", perm === "granted");
-      showToast(perm === "granted" ? "Notificaciones activadas." : "Permiso no concedido.");
-    });
-
-    document.querySelectorAll(".chip[data-filter]").forEach(chip => {
-      chip.addEventListener("click", () => {
-        document.querySelectorAll(".chip[data-filter]").forEach(c => c.classList.remove("active"));
-        chip.classList.add("active"); activeFilter = chip.dataset.filter; renderLogs();
-      });
-    });
-
-    $("btnClearLog").addEventListener("click", () => { logs = []; saveLogs(); renderLogs(); showToast("Historial limpiado."); });
-
-    $("btnExport").addEventListener("click", () => {
-      if (!logs.length) return showToast("No hay eventos para exportar.");
-      const rows = [["Fecha", "Hora", "Estado", "Detalle", "Tipo"], ...logs.map(l => [l.date, l.time, l.title, l.detail, l.type])];
-      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
-      a.download = `vaultguard-auditoria-${Date.now()}.csv`; a.click();
-      showToast("Reporte CSV descargado.");
-    });
-
-    if ("Notification" in window && Notification.permission === "granted") {
-      $("notifLabel").textContent = "Notif. ON"; $("btnNotif").classList.add("active-toggle");
-    }
-    renderLogs(); syncFirebase(); setInterval(syncFirebase, POLL_MS);
-  </script>
+let wasLocked = false;
+setInterval(() => {
+  $("clock").textContent = hhmmss();
+  const s = Math.floor((Date.now() - app.started) / 1000);
+  $("sTime").textContent = [s / 3600, s / 60 % 60, s % 60].map(x => String(Math.floor(x)).padStart(2, "0")).join(":");
+  const locked = lockLeft() > 0; if (locked || wasLocked) renderControls(); wasLocked = locked;
+}, 1000);
+addEventListener("resize", () => draw());
+notifLabel();
+initV4();
+connect(new URLSearchParams(location.search).has("demo"));
+</script>
 </body>
 </html>
